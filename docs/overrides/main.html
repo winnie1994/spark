@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block extrahead %}
+  {{ super() }}
+  <style>
+    .hero {
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 0;
+    }
+    .hero h2 {
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 0rem;
+    }
+
+    .hero img.hero-image {
+      width: 100%;
+      margin-top: 3rem;
+      max-width: 800px;
+      border-radius: 15px;
+    }
+
+    .hero img {
+      display: block;
+      max-width: 550px;
+      margin:auto;
+    }
+
+    @media screen and (max-width: 60em) {
+      .hero img {
+        max-width: 400px;
+        margin:auto;
+      }
+      .hero h2 {
+        font-size: 22px;
+      }
+    }
+
+  </style>
+{% endblock %}

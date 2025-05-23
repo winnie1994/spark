@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Forge • Environment Mapping</title>
+  <style>
+    label {
+      font-family: sans-serif;
+      font-size: 20px;
+      position: absolute;
+      margin: 1rem auto;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <label><input type="checkbox" onchange="toggleMetal(this)" autocomplete="off"> Metal</label>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/examples/js/vendor/three/build/three.module.js",
+        "three/addons/": "/examples/js/vendor/three/examples/jsm/",
+        "@forge-gfx/forge": "/dist/forge.module.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { SplatMesh, ForgeControls, ForgeRenderer } from "@forge-gfx/forge";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { getAssetFileURL } from "/examples/js/get-asset-url.js";
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setClearColor(new THREE.Color(0x3b5272), 1.0);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement)
+
+    // Explicitly create a ForgeRenderer to render environment maps
+    const forge = new ForgeRenderer({ renderer });
+
+    const background = new SplatMesh({ url: "https://d28zzqy0iyovbz.cloudfront.net/a58b478d/scene.compressed.ply" });
+
+    background.position.set(5, -10, -10);
+    background.quaternion.set(1, 0, 0, 0);
+    scene.add(background);
+    // Make sure background is loaded before rendering env map
+    await background.initialized;
+
+    // Add light to make the duck pop out a bit more
+    const rectLight = new THREE.RectAreaLight(0xffffff, 3, 2, 2);
+    rectLight.position.set(0, 1, 1);
+    rectLight.lookAt(0, 0, 0);
+    scene.add(rectLight)
+
+    // Add rubber duck
+    const gltfLoader = new GLTFLoader();
+    const modelURL = await getAssetFileURL('rubberduck.glb');
+    const gltf = await gltfLoader.loadAsync(modelURL);
+    const duck = gltf.scene;
+    duck.position.set(0, -0.2, -1);
+    duck.scale.set(3, 3, 3);
+    scene.add(duck);
+
+    let renderedEnvMap = false;
+
+    const controls = new ForgeControls({ canvas: renderer.domElement });
+
+    renderer.setAnimationLoop(function animate(time) {
+      controls.update(camera);
+      renderer.render(scene, camera);
+      duck.rotation.y += 0.01;
+
+      // Make sure we only launch async renderEnvMap once
+      if (!renderedEnvMap) {
+        renderedEnvMap = true;
+        forge.renderEnvMap({
+          scene,
+          // World center to render from
+          worldCenter: duck.position,
+          // Hide the donut so we don't obscure the environment
+          hideObjects: [duck],
+          // Not needed in normal use, guards against "first render" issues
+          update: true,
+        })
+          .then((envMap) => {
+            for (let obj of duck.children) {
+              // Set some reflectivity in the materials of the duck
+              obj.material.envMap = envMap;
+              obj.material.original_color = obj.material.color.clone();
+              obj.material.metalness = 0.2;
+              obj.material.roughness = 0.1;
+            }
+          });
+      }
+    });
+
+    // Toggles between normal duck and metal duck
+    window.toggleMetal = function toggleMetal(el) {
+      const metal = el.checked;
+      for (let obj of duck.children) {
+        obj.material.color.set(metal ? 0xAAAAAA : obj.material.original_color);
+        obj.material.metalness = metal ? 1.0 : 0.2;
+        obj.material.roughness = metal ? 0.02 : 0.1;
+      }
+    }
+  </script>
+</body>
+
+</html>
