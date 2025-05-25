@@ -151,7 +151,7 @@ To revert and be able to commit into to the dist directory again:
 git update-index --no-assume-unchanged dist/*
 ```
 
-To liste ignored files in case of need to troubleshoot
+To list ignored files in case of need to troubleshoot
 
 ```
 git ls-files -v | grep '^[a-z]' | cut -c3-
