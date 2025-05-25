@@ -2,6 +2,7 @@
 
 body {
   margin: 0;
+  background-color: black;
 }
 
 h1 {
@@ -24,7 +25,7 @@ h3 {
 #menu {
   position: absolute;
   left: -12rem;
-  display: inline-block;
+  display: none;
   background-color: rgba(223, 203, 171, 0.8);
   padding: 2rem 2rem;
   margin-top: 4rem;
