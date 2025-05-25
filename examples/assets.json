@@ -86,5 +86,9 @@
   "cat.spz": {
     "url": "https://forge-gfx.github.io/assets/splats/cat.spz",
     "directory": "splats"
+  },
+  "arrow.glb": {
+    "url": "https://forge-gfx.github.io/assets/models/arrow.glb",
+    "directory": "models"
   }
 }
