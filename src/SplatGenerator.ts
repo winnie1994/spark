@@ -8,7 +8,9 @@ import {
   DynoVec4,
   Gsplat,
   dynoBlock,
+  transformDir,
   transformGsplat,
+  transformPos,
 } from "./dyno";
 
 // A GsplatGenerator is a dyno program that maps an index to a Gsplat's properties
@@ -81,8 +83,23 @@ export class SplatTransformer {
     });
   }
 
+  // Apply the transform to a Vec3 position in a dyno program.
+  apply(position: DynoVal<"vec3">): DynoVal<"vec3"> {
+    return transformPos(position, {
+      scale: this.scale,
+      rotate: this.rotate,
+      translate: this.translate,
+    });
+  }
+
+  applyDir(dir: DynoVal<"vec3">): DynoVal<"vec3"> {
+    return transformDir(dir, {
+      rotate: this.rotate,
+    });
+  }
+
   // Apply the transform to a Gsplat in a dyno program.
-  modify(gsplat: DynoVal<typeof Gsplat>): DynoVal<typeof Gsplat> {
+  applyGsplat(gsplat: DynoVal<typeof Gsplat>): DynoVal<typeof Gsplat> {
     return transformGsplat(gsplat, {
       scale: this.scale,
       rotate: this.rotate,

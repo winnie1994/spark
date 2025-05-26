@@ -214,6 +214,8 @@ export function textSplats({
   textAlign,
   // line spacing multiplier, lines delimited by "\n" (default: 1.0)
   lineHeight,
+  // Coordinate scale in object-space (default: 1.0)
+  objectScale,
 }: {
   text: string;
   font?: string;
@@ -223,6 +225,7 @@ export function textSplats({
   dotRadius?: number;
   textAlign?: "left" | "center" | "right" | "start" | "end";
   lineHeight?: number;
+  objectScale?: number;
 }) {
   font = font ?? "Arial";
   fontSize = fontSize ?? 32;
@@ -230,6 +233,7 @@ export function textSplats({
   dotRadius = dotRadius ?? 0.8;
   textAlign = textAlign ?? "start";
   lineHeight = lineHeight ?? 1;
+  objectScale = objectScale ?? 1;
   const lines = text.split("\n");
 
   const canvas = document.createElement("canvas");
@@ -276,7 +280,7 @@ export function textSplats({
   const rgba = new Uint8Array(imageData.data.buffer);
   const splats = new PackedSplats();
   const center = new THREE.Vector3();
-  const scales = new THREE.Vector3().setScalar(dotRadius);
+  const scales = new THREE.Vector3().setScalar(dotRadius * objectScale);
   const quaternion = new THREE.Quaternion(0, 0, 0, 1);
   rgb = rgb ?? new THREE.Color(1, 1, 1);
 
@@ -287,6 +291,7 @@ export function textSplats({
       if (a > 0) {
         const opacity = a / 255;
         center.set(x - 0.5 * (width - 1), 0.5 * (height - 1) - y, 0);
+        center.multiplyScalar(objectScale);
         splats.pushSplat(center, scales, quaternion, opacity, rgb);
       }
       offset += 4;

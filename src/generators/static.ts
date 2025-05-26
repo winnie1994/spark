@@ -99,7 +99,7 @@ export function staticBox({
           quaternion,
           rgba,
         });
-        gsplat = transformer.modify(gsplat);
+        gsplat = transformer.applyGsplat(gsplat);
         return { gsplat };
       },
       {

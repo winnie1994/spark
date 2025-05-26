@@ -18,8 +18,8 @@ export const transformPos = (
   return new TransformPosition({ position, scale, scales, rotate, translate })
     .outputs.position;
 };
-export const transformRay = (
-  ray: DynoVal<"vec3">,
+export const transformDir = (
+  dir: DynoVal<"vec3">,
   {
     scale,
     scales,
@@ -30,7 +30,7 @@ export const transformRay = (
     rotate?: DynoVal<"vec4">;
   },
 ): DynoVal<"vec3"> => {
-  return new TransformRay({ ray, scale, scales, rotate }).outputs.ray;
+  return new TransformDir({ dir, scale, scales, rotate }).outputs.dir;
 };
 export const transformQuat = (
   quaternion: DynoVal<"vec4">,
@@ -90,36 +90,36 @@ export class TransformPosition extends Dyno<
   }
 }
 
-export class TransformRay extends Dyno<
-  { ray: "vec3"; scale: "float"; scales: "vec3"; rotate: "vec4" },
-  { ray: "vec3" }
+export class TransformDir extends Dyno<
+  { dir: "vec3"; scale: "float"; scales: "vec3"; rotate: "vec4" },
+  { dir: "vec3" }
 > {
   constructor({
-    ray,
+    dir,
     scale,
     scales,
     rotate,
   }: {
-    ray?: DynoVal<"vec3">;
+    dir?: DynoVal<"vec3">;
     scale?: DynoVal<"float">;
     scales?: DynoVal<"vec3">;
     rotate?: DynoVal<"vec4">;
   }) {
     super({
-      inTypes: { ray: "vec3", scale: "float", scales: "vec3", rotate: "vec4" },
-      outTypes: { ray: "vec3" },
-      inputs: { ray, scale, scales, rotate },
+      inTypes: { dir: "vec3", scale: "float", scales: "vec3", rotate: "vec4" },
+      outTypes: { dir: "vec3" },
+      inputs: { dir, scale, scales, rotate },
       statements: ({ inputs, outputs }) => {
-        const { ray } = outputs;
-        if (!ray) {
+        const { dir } = outputs;
+        if (!dir) {
           return [];
         }
         const { scale, scales, rotate } = inputs;
         return [
-          `${ray} = ${inputs.ray ?? "vec3(0.0, 0.0, 0.0)"};`,
-          !scale ? null : `${ray} *= ${scale};`,
-          !scales ? null : `${ray} *= ${scales};`,
-          !rotate ? null : `${ray} = quatVec(${rotate}, ${ray});`,
+          `${dir} = ${inputs.dir ?? "vec3(0.0, 0.0, 0.0)"};`,
+          !scale ? null : `${dir} *= ${scale};`,
+          !scales ? null : `${dir} *= ${scales};`,
+          !rotate ? null : `${dir} = quatVec(${rotate}, ${dir});`,
         ].filter(Boolean) as string[];
       },
     });

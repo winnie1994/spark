@@ -624,6 +624,19 @@ export function getTextureSize(numSplats: number): {
   return { width, height, depth, maxSplats };
 }
 
+export function computeMaxSplats(numSplats: number): number {
+  // Compute the size of a Gsplat array texture (2048x2048xD) that can fit
+  // numSplats splats, and return the total number of splats that can be stored
+  // in such a texture.
+  const width = SPLAT_TEX_WIDTH;
+  const height = Math.max(
+    SPLAT_TEX_MIN_HEIGHT,
+    Math.min(SPLAT_TEX_HEIGHT, Math.ceil(numSplats / width)),
+  );
+  const depth = Math.ceil(numSplats / (width * height));
+  return width * height * depth;
+}
+
 // Heuristic function to determine if we are running on a mobile device.
 export function isMobile(): boolean {
   if (navigator.maxTouchPoints > 0) {

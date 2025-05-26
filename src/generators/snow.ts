@@ -231,7 +231,7 @@ export function snowBox({
           rgb,
           opacity: dynoOpacity,
         });
-        gsplat = transformer.modify(gsplat);
+        gsplat = transformer.applyGsplat(gsplat);
         return { gsplat };
       },
       {

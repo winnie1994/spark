@@ -341,6 +341,7 @@ export class PointerControls {
   rotateSpeed: number;
   slideSpeed: number;
   scrollSpeed: number;
+  swapRotateSlide: boolean;
   reverseRotate: boolean;
   reverseSlide: boolean;
   reverseSwipe: boolean;
@@ -385,6 +386,8 @@ export class PointerControls {
     slideSpeed,
     // Speed of movement when using mouse scroll wheel (default DEFAULT_SCROLL_SPEED)
     scrollSpeed,
+    // Swap the direction of rotation and sliding (default: false)
+    swapRotateSlide,
     // Reverse the direction of rotation (default: false)
     reverseRotate,
     // Reverse the direction of sliding (default: false)
@@ -404,6 +407,7 @@ export class PointerControls {
     rotateSpeed?: number;
     slideSpeed?: number;
     scrollSpeed?: number;
+    swapRotateSlide?: boolean;
     reverseRotate?: boolean;
     reverseSlide?: boolean;
     reverseSwipe?: boolean;
@@ -419,6 +423,7 @@ export class PointerControls {
     this.rotateSpeed = rotateSpeed ?? DEFAULT_ROTATE_SPEED;
     this.slideSpeed = slideSpeed ?? DEFAULT_SLIDE_SPEED;
     this.scrollSpeed = scrollSpeed ?? DEFAULT_SCROLL_SPEED;
+    this.swapRotateSlide = swapRotateSlide ?? false;
     this.reverseRotate = reverseRotate ?? false;
     this.reverseSlide = reverseSlide ?? false;
     this.reverseSwipe = reverseSwipe ?? false;
@@ -446,7 +451,15 @@ export class PointerControls {
 
       // Determine if we're starting a rotation pointer action
       const isRotate =
-        !this.rotating && (event.pointerType !== "mouse" || event.button === 0);
+        (!this.swapRotateSlide &&
+          !this.rotating &&
+          (event.pointerType !== "mouse" || event.button === 0)) ||
+        (this.swapRotateSlide &&
+          this.sliding &&
+          !this.rotating &&
+          (event.pointerType !== "mouse" || event.button === 1));
+      // const isRotate =
+      //   !this.rotating && (event.pointerType !== "mouse" || event.button === 0);
       const { pointerId, timeStamp } = event;
 
       if (isRotate) {

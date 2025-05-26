@@ -10,7 +10,7 @@ export {
   getSplatFileType,
 } from "./SplatLoader";
 export { PlyReader } from "./ply";
-export { SpzReader } from "./spz";
+export { SpzReader, SpzWriter, transcodeSpz } from "./spz";
 
 export { PackedSplats, type PackedSplatsOptions } from "./PackedSplats";
 export {

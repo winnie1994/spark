@@ -29,6 +29,8 @@ export type PackedSplatsOptions = {
   // auto-detected (.splat, .ksplat). (default: undefined auto-detects other
   // formats from file contents)
   fileType?: SplatFileType;
+  // File name to use for type detection. (default: undefined)
+  fileName?: string;
   // Reserve space for at least this many splats when constructing the collection
   // initially. The array will automatically resize past maxSplats so setting it is
   // an optional optimization. (default: 0)
@@ -135,7 +137,7 @@ export class PackedSplats {
       const unpacked = await unpackSplats({
         input: fileBytes,
         fileType: options.fileType,
-        pathOrUrl: url,
+        pathOrUrl: options.fileName ?? url,
       });
       this.initialize(unpacked);
     }

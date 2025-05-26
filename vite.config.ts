@@ -73,6 +73,14 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: isFirstPass,
     },
 
+    worker: {
+      plugins: () => [
+        glsl({
+          include: ["**/*.glsl"],
+        }),
+      ],
+    },
+
     server: {
       watch: {
         usePolling: true,

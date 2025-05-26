@@ -45,6 +45,8 @@ export type SplatMeshOptions = {
   // auto-detected (.splat, .ksplat). (default: undefined auto-detects other
   // formats from file contents)
   fileType?: SplatFileType;
+  // File name to use for type detection. (default: undefined)
+  fileName?: string;
   // Use an existing PackedSplats object as the source instead of loading from
   // a file. Can be used to share a collection of Gsplats among multiple SplatMeshes
   // (default: undefined creates a new empty PackedSplats or decoded from a
@@ -224,12 +226,14 @@ export class SplatMesh extends SplatGenerator {
   }
 
   async asyncInitialize(options: SplatMeshOptions) {
-    const { url, fileBytes, fileType, maxSplats, constructSplats } = options;
+    const { url, fileBytes, fileType, fileName, maxSplats, constructSplats } =
+      options;
     if (url || fileBytes || constructSplats) {
       const packedSplatsOptions = {
         url,
         fileBytes,
         fileType,
+        fileName,
         maxSplats,
         construct: constructSplats,
       };
@@ -295,7 +299,8 @@ export class SplatMesh extends SplatGenerator {
     this.packedSplats.dispose();
   }
 
-  constructGenerator({ transform, viewToObject, recolor }: SplatMeshContext) {
+  constructGenerator(context: SplatMeshContext) {
+    const { transform, viewToObject, recolor } = context;
     const generator = dynoBlock(
       { index: "int" },
       { gsplat: Gsplat },
@@ -354,7 +359,7 @@ export class SplatMesh extends SplatGenerator {
         }
 
         // Transform from object to world-space
-        gsplat = transform.modify(gsplat);
+        gsplat = transform.applyGsplat(gsplat);
 
         // Apply any global recoloring and opacity
         const recolorRgba = mul(recolor, splitGsplat(gsplat).outputs.rgba);

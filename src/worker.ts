@@ -3,20 +3,22 @@ import init_wasm, {
   old_sort_splats,
   sort_splats,
 } from "forge-internal-rs";
+import type { TranscodeSpzInput } from "./SplatLoader";
+import { unpackAntiSplat } from "./antisplat";
 import {
   SCALE_MIN,
   SPLAT_TEX_HEIGHT,
-  SPLAT_TEX_MIN_HEIGHT,
   SPLAT_TEX_WIDTH,
   WASM_SPLAT_SORT,
 } from "./defines";
+import { unpackKsplat } from "./ksplat";
 import { PlyReader } from "./ply";
-import { SpzReader } from "./spz";
+import { SpzReader, transcodeSpz } from "./spz";
 import {
+  computeMaxSplats,
   encodeSh1Rgb,
   encodeSh2Rgb,
   encodeSh3Rgb,
-  fromHalf,
   getArrayBuffers,
   setPackedSplat,
   setPackedSplatCenter,
@@ -161,6 +163,16 @@ async function onMessage(event: MessageEvent) {
         }
         break;
       }
+      case "transcodeSpz": {
+        const input = args as TranscodeSpzInput;
+        const spzBytes = await transcodeSpz(input);
+        result = {
+          id,
+          fileBytes: spzBytes,
+          input,
+        };
+        break;
+      }
       default: {
         throw new Error(`Unknown name: ${name}`);
       }
@@ -254,19 +266,6 @@ async function unpackPly({
   return { packedArray, numSplats, extra };
 }
 
-function computeMaxSplats(numSplats: number): number {
-  // Compute the size of a Gsplat array texture (2048x2048xD) that can fit
-  // numSplats splats, and return the total number of splats that can be stored
-  // in such a texture.
-  const width = SPLAT_TEX_WIDTH;
-  const height = Math.max(
-    SPLAT_TEX_MIN_HEIGHT,
-    Math.min(SPLAT_TEX_HEIGHT, Math.ceil(numSplats / width)),
-  );
-  const depth = Math.ceil(numSplats / (width * height));
-  return width * height * depth;
-}
-
 function unpackSpz(fileBytes: Uint8Array): {
   packedArray: Uint32Array;
   numSplats: number;
@@ -315,373 +314,6 @@ function unpackSpz(fileBytes: Uint8Array): {
       }
     },
   );
-  return { packedArray, numSplats, extra };
-}
-
-function unpackAntiSplat(fileBytes: Uint8Array): {
-  packedArray: Uint32Array;
-  numSplats: number;
-} {
-  const numSplats = Math.floor(fileBytes.length / 32); // 32 bytes per splat
-  if (numSplats * 32 !== fileBytes.length) {
-    throw new Error("Invalid .splat file size");
-  }
-  const maxSplats = computeMaxSplats(numSplats);
-  const packedArray = new Uint32Array(maxSplats * 4);
-  const f32 = new Float32Array(fileBytes.buffer);
-
-  for (let i = 0; i < numSplats; ++i) {
-    const i32 = i * 32;
-    const i8 = i * 8;
-    const x = f32[i8 + 0];
-    const y = f32[i8 + 1];
-    const z = f32[i8 + 2];
-    const scaleX = f32[i8 + 3];
-    const scaleY = f32[i8 + 4];
-    const scaleZ = f32[i8 + 5];
-    const r = fileBytes[i32 + 24] / 255;
-    const g = fileBytes[i32 + 25] / 255;
-    const b = fileBytes[i32 + 26] / 255;
-    const opacity = fileBytes[i32 + 27] / 255;
-    const quatW = (fileBytes[i32 + 28] - 128) / 128;
-    const quatX = (fileBytes[i32 + 29] - 128) / 128;
-    const quatY = (fileBytes[i32 + 30] - 128) / 128;
-    const quatZ = (fileBytes[i32 + 31] - 128) / 128;
-    setPackedSplat(
-      packedArray,
-      i,
-      x,
-      y,
-      z,
-      scaleX,
-      scaleY,
-      scaleZ,
-      quatX,
-      quatY,
-      quatZ,
-      quatW,
-      opacity,
-      r,
-      g,
-      b,
-    );
-  }
-  return { packedArray, numSplats };
-}
-
-type KsplatCompression = {
-  bytesPerCenter: number;
-  bytesPerScale: number;
-  bytesPerRotation: number;
-  bytesPerColor: number;
-  bytesPerSphericalHarmonicsComponent: number;
-  scaleOffsetBytes: number;
-  rotationOffsetBytes: number;
-  colorOffsetBytes: number;
-  sphericalHarmonicsOffsetBytes: number;
-  scaleRange: number;
-};
-
-const KSPLAT_COMPRESSION: Record<number, KsplatCompression> = {
-  0: {
-    bytesPerCenter: 12,
-    bytesPerScale: 12,
-    bytesPerRotation: 16,
-    bytesPerColor: 4,
-    bytesPerSphericalHarmonicsComponent: 4,
-    scaleOffsetBytes: 12,
-    rotationOffsetBytes: 24,
-    colorOffsetBytes: 40,
-    sphericalHarmonicsOffsetBytes: 44,
-    scaleRange: 1,
-  },
-  1: {
-    bytesPerCenter: 6,
-    bytesPerScale: 6,
-    bytesPerRotation: 8,
-    bytesPerColor: 4,
-    bytesPerSphericalHarmonicsComponent: 2,
-    scaleOffsetBytes: 6,
-    rotationOffsetBytes: 12,
-    colorOffsetBytes: 20,
-    sphericalHarmonicsOffsetBytes: 24,
-    scaleRange: 32767,
-  },
-  2: {
-    bytesPerCenter: 6,
-    bytesPerScale: 6,
-    bytesPerRotation: 8,
-    bytesPerColor: 4,
-    bytesPerSphericalHarmonicsComponent: 1,
-    scaleOffsetBytes: 6,
-    rotationOffsetBytes: 12,
-    colorOffsetBytes: 20,
-    sphericalHarmonicsOffsetBytes: 24,
-    scaleRange: 32767,
-  },
-};
-
-const KSPLAT_SH_DEGREE_TO_COMPONENTS: Record<number, number> = {
-  0: 0,
-  1: 9,
-  2: 24,
-  3: 45,
-};
-
-function unpackKsplat(fileBytes: Uint8Array): {
-  packedArray: Uint32Array;
-  numSplats: number;
-  extra: Record<string, unknown>;
-} {
-  const HEADER_BYTES = 4096;
-  const SECTION_BYTES = 1024;
-
-  let headerOffset = 0;
-  const header = new DataView(fileBytes.buffer, headerOffset, HEADER_BYTES);
-  headerOffset += HEADER_BYTES;
-
-  const versionMajor = header.getUint8(0);
-  const versionMinor = header.getUint8(1);
-  if (versionMajor !== 0 || versionMinor < 1) {
-    throw new Error(
-      `Unsupported .ksplat version: ${versionMajor}.${versionMinor}`,
-    );
-  }
-  const maxSectionCount = header.getUint32(4, true);
-  // const sectionCount = header.getUint32(8, true);
-  // const maxSplatCount = header.getUint32(12, true);
-  const splatCount = header.getUint32(16, true);
-  const compressionLevel = header.getUint16(20, true);
-  if (compressionLevel < 0 || compressionLevel > 2) {
-    throw new Error(`Invalid .ksplat compression level: ${compressionLevel}`);
-  }
-  // const sceneCenterX = header.getFloat32(24, true);
-  // const sceneCenterY = header.getFloat32(28, true);
-  // const sceneCenterZ = header.getFloat32(32, true);
-  const minSphericalHarmonicsCoeff = header.getFloat32(36, true) || -1.5;
-  const maxSphericalHarmonicsCoeff = header.getFloat32(40, true) || 1.5;
-
-  const numSplats = splatCount;
-  const maxSplats = computeMaxSplats(numSplats);
-  const packedArray = new Uint32Array(maxSplats * 4);
-  const extra: Record<string, unknown> = {};
-
-  let sectionBase = HEADER_BYTES + maxSectionCount * SECTION_BYTES;
-
-  for (let section = 0; section < maxSectionCount; ++section) {
-    const section = new DataView(fileBytes.buffer, headerOffset, SECTION_BYTES);
-    headerOffset += SECTION_BYTES;
-
-    const sectionSplatCount = section.getUint32(0, true);
-    const sectionMaxSplatCount = section.getUint32(4, true);
-    const bucketSize = section.getUint32(8, true);
-    const bucketCount = section.getUint32(12, true);
-    const bucketBlockSize = section.getFloat32(16, true);
-    const bucketStorageSizeBytes = section.getUint16(20, true);
-    const compressionScaleRange =
-      (section.getUint32(24, true) ||
-        KSPLAT_COMPRESSION[compressionLevel]?.scaleRange) ??
-      1;
-    // const fullBucketCount = section.getUint32(32, true);
-    const partiallyFilledBucketCount = section.getUint32(36, true);
-    const bucketsMetaDataSizeBytes = partiallyFilledBucketCount * 4;
-    const bucketsStorageSizeBytes =
-      bucketStorageSizeBytes * bucketCount + bucketsMetaDataSizeBytes;
-    const sphericalHarmonicsDegree = section.getUint16(40, true);
-    const shComponents =
-      KSPLAT_SH_DEGREE_TO_COMPONENTS[sphericalHarmonicsDegree];
-
-    const {
-      bytesPerCenter,
-      bytesPerScale,
-      bytesPerRotation,
-      bytesPerColor,
-      bytesPerSphericalHarmonicsComponent,
-      scaleOffsetBytes,
-      rotationOffsetBytes,
-      colorOffsetBytes,
-      sphericalHarmonicsOffsetBytes,
-    } = KSPLAT_COMPRESSION[compressionLevel];
-    const bytesPerSplat =
-      bytesPerCenter +
-      bytesPerScale +
-      bytesPerRotation +
-      bytesPerColor +
-      shComponents * bytesPerSphericalHarmonicsComponent;
-    const splatDataStorageSizeBytes = bytesPerSplat * sectionMaxSplatCount;
-    const storageSizeBytes =
-      splatDataStorageSizeBytes + bucketsStorageSizeBytes;
-
-    const sh1Index = [0, 3, 6, 1, 4, 7, 2, 5, 8];
-    const sh2Index = [
-      9, 14, 19, 10, 15, 20, 11, 16, 21, 12, 17, 22, 13, 18, 23,
-    ];
-    const sh3Index = [
-      24, 31, 38, 25, 32, 39, 26, 33, 40, 27, 34, 41, 28, 35, 42, 29, 36, 43,
-      30, 37, 44,
-    ];
-    const sh1 =
-      sphericalHarmonicsDegree >= 1 ? new Float32Array(3 * 3) : undefined;
-    const sh2 =
-      sphericalHarmonicsDegree >= 2 ? new Float32Array(5 * 3) : undefined;
-    const sh3 =
-      sphericalHarmonicsDegree >= 3 ? new Float32Array(7 * 3) : undefined;
-
-    const compressionScaleFactor = bucketBlockSize / 2 / compressionScaleRange;
-    const bucketsBase = sectionBase + bucketsMetaDataSizeBytes;
-    const dataBase = sectionBase + bucketsStorageSizeBytes;
-    const data = new DataView(
-      fileBytes.buffer,
-      dataBase,
-      splatDataStorageSizeBytes,
-    );
-    const bucketArray = new Float32Array(
-      fileBytes.buffer,
-      bucketsBase,
-      bucketCount * 3,
-    );
-
-    function getSh(splatOffset: number, component: number) {
-      if (compressionLevel === 0) {
-        return data.getFloat32(
-          splatOffset + sphericalHarmonicsOffsetBytes + component * 4,
-          true,
-        );
-      }
-      if (compressionLevel === 1) {
-        return fromHalf(
-          data.getUint16(
-            splatOffset + sphericalHarmonicsOffsetBytes + component * 2,
-            true,
-          ),
-        );
-      }
-      const t =
-        data.getUint8(splatOffset + sphericalHarmonicsOffsetBytes + component) /
-        255;
-      return (
-        minSphericalHarmonicsCoeff +
-        t * (maxSphericalHarmonicsCoeff - minSphericalHarmonicsCoeff)
-      );
-    }
-
-    for (let i = 0; i < sectionSplatCount; ++i) {
-      const splatOffset = i * bytesPerSplat;
-      const bucketIndex = Math.floor(i / bucketSize);
-
-      const x =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + 0, true)
-          : (data.getUint16(splatOffset + 0, true) - compressionScaleRange) *
-              compressionScaleFactor +
-            bucketArray[3 * bucketIndex + 0];
-      const y =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + 4, true)
-          : (data.getUint16(splatOffset + 2, true) - compressionScaleRange) *
-              compressionScaleFactor +
-            bucketArray[3 * bucketIndex + 1];
-      const z =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + 8, true)
-          : (data.getUint16(splatOffset + 4, true) - compressionScaleRange) *
-              compressionScaleFactor +
-            bucketArray[3 * bucketIndex + 2];
-
-      const scaleX =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + scaleOffsetBytes + 0, true)
-          : fromHalf(data.getUint16(splatOffset + scaleOffsetBytes + 0, true));
-      const scaleY =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + scaleOffsetBytes + 4, true)
-          : fromHalf(data.getUint16(splatOffset + scaleOffsetBytes + 2, true));
-      const scaleZ =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + scaleOffsetBytes + 8, true)
-          : fromHalf(data.getUint16(splatOffset + scaleOffsetBytes + 4, true));
-
-      const quatW =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + rotationOffsetBytes + 0, true)
-          : fromHalf(
-              data.getUint16(splatOffset + rotationOffsetBytes + 0, true),
-            );
-      const quatX =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + rotationOffsetBytes + 4, true)
-          : fromHalf(
-              data.getUint16(splatOffset + rotationOffsetBytes + 2, true),
-            );
-      const quatY =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + rotationOffsetBytes + 8, true)
-          : fromHalf(
-              data.getUint16(splatOffset + rotationOffsetBytes + 4, true),
-            );
-      const quatZ =
-        compressionLevel === 0
-          ? data.getFloat32(splatOffset + rotationOffsetBytes + 12, true)
-          : fromHalf(
-              data.getUint16(splatOffset + rotationOffsetBytes + 6, true),
-            );
-
-      const r = data.getUint8(splatOffset + colorOffsetBytes + 0) / 255;
-      const g = data.getUint8(splatOffset + colorOffsetBytes + 1) / 255;
-      const b = data.getUint8(splatOffset + colorOffsetBytes + 2) / 255;
-      const opacity = data.getUint8(splatOffset + colorOffsetBytes + 3) / 255;
-
-      setPackedSplat(
-        packedArray,
-        i,
-        x,
-        y,
-        z,
-        scaleX,
-        scaleY,
-        scaleZ,
-        quatX,
-        quatY,
-        quatZ,
-        quatW,
-        opacity,
-        r,
-        g,
-        b,
-      );
-
-      if (sphericalHarmonicsDegree >= 1) {
-        if (sh1) {
-          if (!extra.sh1) {
-            extra.sh1 = new Uint32Array(numSplats * 2);
-          }
-          for (const [i, key] of sh1Index.entries()) {
-            sh1[i] = getSh(splatOffset, key);
-          }
-          encodeSh1Rgb(extra.sh1 as Uint32Array, i, sh1);
-        }
-        if (sh2) {
-          if (!extra.sh2) {
-            extra.sh2 = new Uint32Array(numSplats * 4);
-          }
-          for (const [i, key] of sh2Index.entries()) {
-            sh2[i] = getSh(splatOffset, key);
-          }
-          encodeSh2Rgb(extra.sh2 as Uint32Array, i, sh2);
-        }
-        if (sh3) {
-          if (!extra.sh3) {
-            extra.sh3 = new Uint32Array(numSplats * 4);
-          }
-          for (const [i, key] of sh3Index.entries()) {
-            sh3[i] = getSh(splatOffset, key);
-          }
-          encodeSh3Rgb(extra.sh3 as Uint32Array, i, sh3);
-        }
-      }
-    }
-    sectionBase += storageSizeBytes;
-  }
   return { packedArray, numSplats, extra };
 }
 
