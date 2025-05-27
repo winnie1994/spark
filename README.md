@@ -194,3 +194,9 @@ npm run site:serve
 ## Deploy Forge website
 
 TO-DO
+
+## Compress splats
+
+To compress a splat to [spz](https://scaniverse.com/spz) run
+
+`npm run assets:compress <file or URL to ply>`
