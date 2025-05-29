@@ -83,12 +83,8 @@
     "url": "https://forge.dev/assets/images/butterfly.png",
     "directory": "images"
   },
-  "furry.spz": {
-    "url": "https://forge.dev/assets/splats/furry.spz",
-    "directory": "splats"
-  },
-  "pedestal.spz": {
-    "url": "https://forge.dev/assets/splats/pedestal.spz",
+  "furry-logo-pedestal.spz": {
+    "url": "https://forge.dev/assets/splats/furry-logo-pedestal.spz",
     "directory": "splats"
   },
   "cat.spz": {
