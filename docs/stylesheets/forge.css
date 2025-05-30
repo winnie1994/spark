@@ -33,12 +33,18 @@
   border-radius: 5px;
 }
 
-.icon-github {
+.icon-discord {
   width: 30px;
   height: 30px;
 }
 
-.icon-github path {
+.icon-github {
+  width: 25px;
+  height: 25px;
+}
+
+.icon-github path,
+.icon-discord path {
   fill: white;
 }
 

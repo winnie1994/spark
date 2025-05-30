@@ -2,7 +2,6 @@ site_name: Forge
 site_url: https://www.forge.dev/
 theme:
   name: material
-  logo: assets/images/logo.png
   custom_dir: docs/overrides
   features:
       - content.code.copy
