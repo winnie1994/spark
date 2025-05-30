@@ -11,7 +11,6 @@ export declare class SplatLoader extends Loader {
 }
 export declare enum SplatFileType {
     PLY = "ply",
-    WLG0 = "wlg0",
     SPZ = "spz",
     SPLAT = "splat",
     KSPLAT = "ksplat"
