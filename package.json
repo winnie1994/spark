@@ -1,9 +1,18 @@
 {
   "name": "@forge-gfx/forge",
-  "private": true,
-  "version": "0.0.1",
-  "type": "module",
+  "version": "0.1.0",
   "description": "An advanced 3D Gaussian Splatting renderer for THREE.js",
+  "homepage": "https://forge.dev/",
+  "type": "module",
+  "main": "./dist/forge.cjs.js",
+  "module": "./dist/forge.module.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/forge.module.js",
+      "require": "./dist/forge.cjs.js"
+    }
+  },
   "scripts": {
     "assets:clean": "node scripts/clean-assets.js",
     "assets:compress": "node scripts/compress-to-spz.js",
@@ -29,14 +38,9 @@
     "start": "npm run dev",
     "test": "node --no-warnings --loader ts-node/esm --test test/**/*.test.ts"
   },
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/forge.module.js",
-      "require": "./dist/forge.cjs.js"
-    }
-  },
+  "repository": "forge-fgx/forge",
   "files": ["dist"],
+  "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/three": "0.172.0",
@@ -54,5 +58,6 @@
   "dependencies": {
     "fflate": "^0.8.2",
     "forge-internal-rs": "file:rust/forge-internal-rs/pkg"
-  }
+  },
+  "keywords": ["3d", "three.js", "gsplats", "3dgs", "gaussian", "splats"]
 }
