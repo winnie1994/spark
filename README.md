@@ -76,7 +76,7 @@ Copy the following code into an `index.html` file.
       renderer.render(scene, camera);
       butterfly.rotation.y += 0.01;
     });
-  </script>
+</script>
 ```
 
 See the [Run Examples](#run-examples) section below to try out other examples.
