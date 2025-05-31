@@ -24,7 +24,7 @@
     "build:watch": "onchange 'src/**/*.{ts,glsl}' -- npm run build:dev",
     "clean": "rm -rf dist/ && rm -rf node_modules/ && rm -rf rust/target/ && rm -rf rust/forge-internal-rs/pkg/ && npm run assets:clean",
     "dev": "npm run build:dev && (vite --host & npm run build:watch)",
-    "docs": "mkdocs serve",
+    "docs": "node scripts/clean-site-files.js && node scripts/copy-site-files.js && mkdocs serve",
     "format": "biome format .",
     "format:fix": "biome format . --fix",
     "lint": "biome check .",

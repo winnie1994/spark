@@ -14,7 +14,8 @@
       "rust/forge-internal-rs/pkg",
       "src/vrButton.ts",
       "site",
-      "site-repo"
+      "site-repo",
+      "docs"
     ]
   },
   "formatter": {
