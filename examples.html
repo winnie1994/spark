@@ -221,7 +221,7 @@
           panel.querySelectorAll('.example-link').forEach((link) => {
             link.addEventListener('click', (e) => {
               e.preventDefault();
-              const path = link.getAttribute('href');
+              const path = link.getAttribute('href').substring(1);
               iframe.src = path;
 
               console.log('path:', path);
