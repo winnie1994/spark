@@ -221,14 +221,12 @@
           panel.querySelectorAll('.example-link').forEach((link) => {
             link.addEventListener('click', (e) => {
               e.preventDefault();
-              const path = link.getAttribute('href').substring(1);
+              const path = link.getAttribute('href');
               iframe.src = path;
 
-              console.log('path:', path);
               document.querySelectorAll('.example-link').forEach(l => l.classList.remove('active'));
               link.classList.add('active');
-              codeButton.href = `https://github.com/forge-gfx/forge/blob/main/${path}`;
-              console.log('codeButton href:', codeButton.href);
+              codeButton.href = `https://github.com/forge-gfx/forge/blob/main/${path.substring(1)}`;
             });
           });
         }
