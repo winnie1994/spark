@@ -65,6 +65,7 @@ export default defineConfig(({ mode }) => {
           return isMinify ? `${base}.min.js` : `${base}.js`;
         },
       },
+      sourcemap: true,
       rollupOptions: {
         external: ["three"],
         output: {
