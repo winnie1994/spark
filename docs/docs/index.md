@@ -9,8 +9,8 @@ Copy and paste code below in an `index.html` file or remix in the [Web Playgroun
 <script type="importmap">
 {
   "imports": {
-    "three": "/node_modules/three/build/three.module.js",
-    "@worldlabsai/forge": "/dist/forge.module.js"
+    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
+    "@worldlabsai/forge": "https://forge.dev/releases/forge/0.1.0/forge.module.js"
   }
 }
 </script>
@@ -19,14 +19,15 @@ import * as THREE from "three";
 import { SplatMesh } from "@worldlabsai/forge";
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement)
-`
-const butterfly = new SplatMesh({ url: "../assets/splats/butterfly.spz"});
+
+const splatURL = "https://forge.dev/assets/splats/butterfly.spz";
+const butterfly = new SplatMesh({ url: splatURL });
 butterfly.quaternion.set(1, 0, 0, 0);
-butterfly.position.set(0, 0, -1);
+butterfly.position.set(0, 0, -3);
 scene.add(butterfly);
 
 renderer.setAnimationLoop(function animate(time) {
@@ -38,7 +39,7 @@ renderer.setAnimationLoop(function animate(time) {
 ## Install with NPM
 
 ```shell
-npm install forge-dev
+npm install @forge-gfx/forge
 ```
 ## Develop and contribute to Forge
 

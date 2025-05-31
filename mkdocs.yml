@@ -9,19 +9,19 @@ extra_css:
   - stylesheets/forge.css
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - Overview: overview.md
-  - System Design: system-design.md
-  - ForgeRenderer: forge-renderer.md
-  - ForgeViewpoint: forge-viewpoint.md
-  - SplatMesh: splat-mesh.md
-  - PackedSplats: packed-splats.md
-  - Loading Gsplats: loading-splats.md
-  - Procedural Splats: procedural-splats.md
-  - Splat RGBA-XYZ SDF editing: splat-editing.md
-  - Controls: controls.md
-  - Performance tuning: performance.md
-  - Community Resources: community-resources.md
+  - Getting Started: docs/index.md
+  - Overview: docs/overview.md
+  - System Design: docs/system-design.md
+  - ForgeRenderer: docs/forge-renderer.md
+  - ForgeViewpoint: docs/forge-viewpoint.md
+  - SplatMesh: docs/splat-mesh.md
+  - PackedSplats: docs/packed-splats.md
+  - Loading Gsplats: docs/loading-splats.md
+  - Procedural Splats: docs/procedural-splats.md
+  - Splat RGBA-XYZ SDF editing: docs/splat-editing.md
+  - Controls: docs/controls.md
+  - Performance tuning: docs/performance.md
+  - Community Resources: docs/community-resources.md
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
