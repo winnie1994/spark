@@ -337,7 +337,7 @@
       .add(params, "cloudDensity", 0.1, 1, 0.01)
       .name("Cloud Density")
       .onChange(recreateClouds);
-      
+
     // advanced noise params
     const advancedFolder = gui.addFolder("Advanced");
     advancedFolder
@@ -348,7 +348,7 @@
       .add(params, "frequency", 0.1, 1, 0.01)
       .name("Noise Frequency")
       .onChange(recreateClouds);
-      
+
     const presetsFolder = gui.addFolder("Weather");
     for (const [name, preset] of Object.entries(presets)) {
       presetsFolder.add(
@@ -364,9 +364,6 @@
         name,
       );
     }
-
-    const vrButton = VRButton.createButton(renderer);
-    if (vrButton) document.body.appendChild(vrButton);
 
     let lastTime = 0;
     renderer.setAnimationLoop(function animate(time) {

@@ -28,7 +28,6 @@
       ForgeRenderer,
       PointerControls,
       SplatMesh,
-      VRButton,
       generators,
     } from "@forge-gfx/forge";
     import GUI from "lil-gui";
@@ -210,9 +209,6 @@
         snow.fallDirection.value.copy(params.fallDirection);
       })
       .name("Wind Direction");
-
-    const vrButton = VRButton.createButton(renderer);
-    if (vrButton) document.body.appendChild(vrButton);
 
     let lastTime;
     renderer.setAnimationLoop(function animate(time) {
