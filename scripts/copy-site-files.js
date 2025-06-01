@@ -25,5 +25,6 @@ await copyFile("examples.html", "docs/examples/index.html");
 await rename("docs/examples/viewer", "docs/viewer");
 await mkdir("docs/examples/vendor", { recursive: true });
 copyDir("node_modules/three", "docs/examples/js/vendor/three");
+copyDir("node_modules/lil-gui", "docs/examples/js/vendor/lil-gui");
 copyDir("dist", "docs/dist");
 console.log("Site generated in docs directory.");
