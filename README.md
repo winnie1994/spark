@@ -40,8 +40,6 @@ Check out all the [examples]()
 ## Getting Started
 
 ### Copy Code
-(Note: CDN setup is work-in-progress -- for now, skip to the [Web Editor](#web-editor) or [Run Examples](#run-examples) section to get started.)
-
 
 Copy the following code into an `index.html` file.
 
@@ -79,13 +77,11 @@ Copy the following code into an `index.html` file.
 </script>
 ```
 
-See the [Run Examples](#run-examples) section below to try out other examples.
-
 ### Web Editor
 
 Remix the [glitch starter template](https://glitch.com/edit/#!/forge-dev)
 
-### Usage from CDN
+### CDN
 
 ```html
 <script type="importmap">
@@ -98,13 +94,13 @@ Remix the [glitch starter template](https://glitch.com/edit/#!/forge-dev)
 </script>
 ```
 
-### Install with NPM
+### NPM
 
 ```shell
 npm install @forge-dev/forge
 ```
 
-## Run Examples
+## Run Examples locally
 
 Install [Rust](https://www.rust-lang.org/tools/install) if it's not already installed in your machine.
 
@@ -126,9 +122,8 @@ npm start
 ```
 This will run a dev server by default at [http://localhost:8080/](http://localhost:8080/). Check the console log output to see if yours is served on a different port.
 
-
 ## Develop and contribute to the project
-Here are some additional development tips and instructions:
+
 ### Build troubleshooting
 
 First try cleaning all the build files and re-building everything:
@@ -165,7 +160,7 @@ To list ignored files in case of need to troubleshoot
 git ls-files -v | grep '^[a-z]' | cut -c3-
 ```
 
-### Build docs
+### Build docs and site
 
 Install [Mkdocs Material](https://squidfunk.github.io/mkdocs-material/)
 
@@ -182,7 +177,7 @@ brew install mkdocs-material
 Edit markdown in `/docs` directory
 
 ```
-mkdocs serve
+npm run docs
 ```
 
 ### Build Forge website
@@ -201,7 +196,11 @@ npm run site:serve
 
 ### Deploy Forge website
 
-TO-DO
+The following command will generate a static site from the `docs` directory and push it to the [repo](https://github.com/forge-gfx/forge-gfx.github.io) that hosts the site via `gh-pages`
+
+```
+npm run site:deploy
+```
 
 ### Compress splats
 
