@@ -1,6 +1,6 @@
 # Community Resources
 
-A collection of resources and examples created by the community. To add your own, please submit a PR to edit this page at [forge-gfx/forge](https://github.com/forge-gfx/forge/tree/main/docs/community-resources.md).
+A collection of resources and examples created by the community. To add your own, please submit a PR to edit this page at [forge-gfx/forge](https://github.com/forge-gfx/forge/tree/main/docs/docs/community-resources.md).
 
 ## Discord
 
