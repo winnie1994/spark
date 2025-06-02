@@ -32,14 +32,34 @@
       cursor: pointer;
       margin-right: 2rem;
       margin-bottom: 0.5rem;
-      display: inline-block;
+      background-color: black;
+      border-radius: 10px;
     }
+
+    header {
+      width: 100%;
+      padding: 0;
+      margin-left: 0;
+      padding-top: 20px;
+      text-align: center;
+    }
+
+    @media screen and (max-width: 60em) {
+      label {
+        font-size: 18px;
+      }
+
+      header {
+        margin-left: 1.2rem;
+      }
+    }
+
   </style>
 </head>
 
 <body>
   <header>
-    <label><input type="checkbox" id="debug" autocomplete="off"> Debug Light SDFs</label>
+    <label><input type="checkbox" id="debug" autocomplete="off">Debug Light SDFs</label>
     <label><input type="checkbox" id="daynight" checked="checked" autocomplete="off"> Enable Lighting</label>
   </header>
 
