@@ -10,13 +10,13 @@ Copy and paste code below in an `index.html` file or remix in the [Web Playgroun
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@worldlabsai/forge": "https://forge.dev/releases/forge/0.1.0/forge.module.js"
+      "@forge-gfx/forge": "https://forge.dev/releases/forge/0.1.0/forge.module.js"
     }
   }
 </script>
 <script type="module">
   import * as THREE from "three";
-  import { SplatMesh } from "@worldlabsai/forge";
+  import { SplatMesh } from "@forge-gfx/forge";
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);

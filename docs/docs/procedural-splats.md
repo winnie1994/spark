@@ -55,7 +55,7 @@ scene.add(mesh);
 ## Grid
 
 ```javascript
-import { constructGrid } from "@worldlabsai/forge";
+import { constructGrid } from "@forge-gfx/forge";
 
 const grid = new SplatMesh({
   constructSplats: (splats) => constructGrid({
@@ -90,7 +90,7 @@ scene.add(grid);
 ## XYZ axis
 
 ```javascript
-import { constructAxes } from "@worldlabsai/forge";
+import { constructAxes } from "@forge-gfx/forge";
 
 const axes = new SplatMesh({
   constructSplats: (splats) => constructAxes({ splats }),
@@ -118,7 +118,7 @@ scene.add(axes);
 ## Splat sphere
 
 ```javascript
-import { constructSpherePoints } from "@worldlabsai/forge";
+import { constructSpherePoints } from "@forge-gfx/forge";
 
 const sphere = new SplatMesh({
   constructSplats: (splats) => constructSpherePoints({
