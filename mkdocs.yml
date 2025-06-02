@@ -1,5 +1,5 @@
 site_name: Forge
-site_url: https://www.forge.dev/
+site_url: https://forge.dev/
 theme:
   name: material
   custom_dir: docs/overrides

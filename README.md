@@ -8,8 +8,8 @@
 
   [Features](#features) -
   [Getting Started](#getting-started) -
-  <a href="https://www.forge.dev/">Documentation</a> -
-  <a href="https://www.forge.dev/">FAQ</a>
+  <a href="https://forge.dev/">Documentation</a> -
+  <a href="https://forge.dev/">FAQ</a>
   </div>
   </p>
 
@@ -21,7 +21,7 @@
   </div>
 
 <p>
-  <a href="https://www.forge.dev" target="_blank">
+  <a href="https://forge.dev" target="_blank">
     <picture>
     </picture>
   </a>
