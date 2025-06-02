@@ -100,7 +100,7 @@ Remix the [glitch starter template](https://glitch.com/edit/#!/forge-dev)
 ### NPM
 
 ```shell
-npm install @forge-dev/forge
+npm install @forge-gfx/forge
 ```
 
 ## Run Examples locally
