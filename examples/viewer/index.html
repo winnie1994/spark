@@ -302,7 +302,6 @@
     urlFormEl.addEventListener('submit', function handleEnterKey(event) {
       event.preventDefault();
       const url = new URL(window.location);
-      debugger;
       const splatURL = urlInputEl.value;
       loadSplatURL(urlInputEl.value);
       url.searchParams.set('url', splatURL);
@@ -310,7 +309,6 @@
     });
 
     document.querySelector('.spz-button').addEventListener('click', async function () {
-      debugger;
       const fileInfo =  {
         fileBytes: fileBytes,
         pathOrUrl: fileName,

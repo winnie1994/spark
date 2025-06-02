@@ -552,7 +552,6 @@
         const maxSh = writeOptions.maxSh;
         const fractionalBits = writeOptions.fractionalBits;
         const opacityThreshid = writeOptions.trimOpacity ? writeOptions.trimOpacityThreshold : undefined;
-        debugger;
         const transcode = await transcodeSpz({ inputs: transcodeInputs, maxSh, clipXyz, fractionalBits, opacityThreshold: opacityThreshid });
 
         if (transcode.clippedCount && transcode.clippedCount > 0) {
