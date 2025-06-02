@@ -314,11 +314,6 @@
       const fileInfo =  {
         fileBytes: fileBytes,
         pathOrUrl: fileName,
-        transform: {
-          translate: loadedSplat.position.toArray(),
-          quaternion: loadedSplat.quaternion.toArray(),
-          scale: (loadedSplat.scale.x + loadedSplat.scale.y + loadedSplat.scale.z) / 3
-        },
       };
 
       const transcodeInfo = {
