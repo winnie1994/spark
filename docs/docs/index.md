@@ -51,11 +51,19 @@ npm run dev
 
 This will run a Web server at [http://localhost:8080/](http://localhost:8080/) with the examples.
 
-## Next Steps
+## Table of Contents
 
-Read more about Forge from the left navigation panel (expand browser window to see it), or follow one of the links below:
-
-- [Learn why Forge exists and its feature set](overview.md)
-- [Forge system design overview](system-design.md)
-- [Add a SplatMesh to your scene](splat-mesh.md)
-- [Community resources](community-resources.md)
+- [Forge Overview](overview.md)
+- [System Design](system-design.md)
+- [ForgeRenderer](forge-renderer.md)
+- [ForgeViewpoint](forge-viewpoint.md)
+- [SplatMesh](splat-mesh.md)
+- [PackedSplats](packed-splats.md)
+- [Loading Gsplats](loading-splats.md)
+- [Procedural Splats](procedural-splats.md)
+- [Splat RGBA-XYZ SDF editing](splat-editing.md)
+- [Dyno overview](dyno-overview.md)
+- [Dyno standard library](dyno-stdlib.md)
+- [Controls](controls.md)
+- [Performance tuning](performance.md)
+- [Community Resources](community-resources.md)
