@@ -125,14 +125,44 @@
   color: white;
 }
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  max-width: 800px;
-  margin: 1.5rem auto;
+.feature-list {
+  font-size: 1rem;
+  margin: auto;
+  margin-bottom: 30px;
+  max-width: 600px;
 }
 
-.feature-item {
-  list-style: none;
+@media screen and (max-width: 60em) {
+  .feature-list {
+    font-size: 0.8rem;
+  }
+
+  .md-custom-header-right {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .icon-discord,
+  .icon-github {
+    margin-right: 15px;
+  }
+
+  .icon-discord {
+    width: 25px;
+    height: 25px;
+  }
+
+  .icon-github {
+    width: 20px;
+    height: 20px;
+  }
+
+  .md-header__button {
+    margin-left: 0;
+  }
+
+  [dir=ltr] .md-header__title {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
