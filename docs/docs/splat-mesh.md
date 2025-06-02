@@ -44,7 +44,7 @@ scene.add(splats);
 
 You can create a `new SplatMesh()` with no options, which will create a new default instance with `.numSplats=0`. Alternatively, you can provide an input `url` to fetch and decode, `fileBytes`, or `packedSplats` (an existing collection of "packed" splats). Forge supports most splat file types, including .ply (including SuperSplat compressed), .splat, .ksplat, .spz. To load filetypes .splat and .ksplat (which can't be reliably auto-detected), use the optional `fileType` argument.
 
-Constructor argument callbacks can be used like `constructSplats` to create a collection of splats procedurally at initialization, `onLoad` when loading and initialization completes, `onFrame` to update state every frame. Splat effects can be injected into the standard splat processinng pipeline that operate in object-space and world-space via `objectModifier` and `worldModifier` respectively.
+Constructor argument callbacks can be used like `constructSplats` to create a collection of splats procedurally at initialization, `onLoad` when loading and initialization completes, `onFrame` to update state every frame. Splat effects can be injected into the standard splat processing pipeline that operate in object-space and world-space via `objectModifier` and `worldModifier` respectively.
 
 | **Parameter**     | Description |
 | ----------------- | ----------- |

@@ -66,10 +66,10 @@ These formats cannot be reliably auto-detected from the file contents, so we use
 First, the auto-detection fails on these files, which triggers file type inference via URL/path file extension. If the URL contains the `.splat` or `.ksplat` extensions (stripping out query parameters etc.), we set the corresponding file type.
 
 ```javascript
-const splats = new SplatMesh({ url: "./butterfly.splats" });
+const splats = new SplatMesh({ url: "./butterfly.splat" });
 scene.add(splats);
 
-const ksplats = new SplatMesh({ url: "./butterfly.ksplats" });
+const ksplats = new SplatMesh({ url: "./butterfly.ksplat" });
 scene.add(ksplats);
 ```
 

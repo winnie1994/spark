@@ -53,7 +53,7 @@ Call this when you are done with the `ForgeViewpoint` and want to free up its re
 
 Use this function to change whether this viewpoint will auto-update its sort order whenever the attached `ForgeRenderer` updates the splats. Turn this on or off depending on whether you expect to do renders from this viewpoint for most frames.
 
-## `async prepareRenderPixels({ scene, camera?, viewToWOrld?, update?, forceOrigin? })`
+## `async prepareRenderPixels({ scene, camera?, viewToWorld?, update?, forceOrigin? })`
 
 Render out a viewpoint as a Uint8Array of RGBA values for the provided scene and any `camera`/`viewToWorld` viewpoint overrides. By default `update` is `true`, which triggers its `ForgeRenderer` to check and potentially update the splats. Setting `update` to `false` disables this and sorts the splats as they are. Setting `forceOrigin` (default: `false`) to `true` forces the view update to recalculate the splats with this view origin, potentially altering any view-dependent effects. If you expect view-dependent effects to play a role in the rendering quality, enable this.
 
