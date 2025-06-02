@@ -81,11 +81,7 @@
     scene.add(duck);
 
     let renderedEnvMap = false;
-
-    const controls = new ForgeControls({ canvas: renderer.domElement });
-
     renderer.setAnimationLoop(function animate(time) {
-      controls.update(camera);
       renderer.render(scene, camera);
       duck.rotation.y += 0.01;
 
