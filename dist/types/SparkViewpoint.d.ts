@@ -1,8 +1,8 @@
-import { ForgeRenderer } from './ForgeRenderer';
+import { SparkRenderer } from './SparkRenderer';
 import { SplatAccumulator } from './SplatAccumulator';
 import { SplatGeometry } from './SplatGeometry';
 import * as THREE from "three";
-export type ForgeViewpointOptions = {
+export type SparkViewpointOptions = {
     autoUpdate?: boolean;
     camera?: THREE.Camera;
     viewToWorld?: THREE.Matrix4;
@@ -19,8 +19,8 @@ export type ForgeViewpointOptions = {
     depthBias?: number;
     sort360?: boolean;
 };
-export declare class ForgeViewpoint {
-    forge: ForgeRenderer;
+export declare class SparkViewpoint {
+    spark: SparkRenderer;
     autoUpdate: boolean;
     camera?: THREE.Camera;
     viewToWorld: THREE.Matrix4;
@@ -47,8 +47,8 @@ export declare class ForgeViewpoint {
     private sortingCheck;
     private readback;
     private orderingFreelist;
-    constructor(options: ForgeViewpointOptions & {
-        forge: ForgeRenderer;
+    constructor(options: SparkViewpointOptions & {
+        spark: SparkRenderer;
     });
     dispose(): void;
     setAutoUpdate(autoUpdate: boolean): void;

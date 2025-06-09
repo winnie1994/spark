@@ -1,5 +1,5 @@
 import * as THREE from "three";
-export declare class ForgeControls {
+export declare class SparkControls {
     fpsMovement: FpsMovement;
     pointerControls: PointerControls;
     lastTime: number;

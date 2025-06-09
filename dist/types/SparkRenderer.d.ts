@@ -1,9 +1,9 @@
-import { ForgeViewpoint, ForgeViewpointOptions } from './ForgeViewpoint';
 import { RgbaArray } from './RgbaArray';
+import { SparkViewpoint, SparkViewpointOptions } from './SparkViewpoint';
 import { SplatAccumulator } from './SplatAccumulator';
 import { SplatGenerator } from './SplatGenerator';
 import * as THREE from "three";
-export type ForgeRendererOptions = {
+export type SparkRendererOptions = {
     renderer: THREE.WebGLRenderer;
     clock?: THREE.Clock;
     autoUpdate?: boolean;
@@ -15,12 +15,12 @@ export type ForgeRendererOptions = {
     blurAmount?: number;
     falloff?: number;
     clipXY?: number;
-    view?: ForgeViewpointOptions;
+    view?: SparkViewpointOptions;
 };
-export declare class ForgeRenderer extends THREE.Mesh {
+export declare class SparkRenderer extends THREE.Mesh {
     renderer: THREE.WebGLRenderer;
     material: THREE.ShaderMaterial;
-    uniforms: ReturnType<typeof ForgeRenderer.makeUniforms>;
+    uniforms: ReturnType<typeof SparkRenderer.makeUniforms>;
     autoUpdate: boolean;
     preUpdate: boolean;
     originDistance: number;
@@ -36,20 +36,20 @@ export declare class ForgeRenderer extends THREE.Mesh {
     active: SplatAccumulator;
     private freeAccumulators;
     private accumulatorCount;
-    defaultView: ForgeViewpoint;
-    autoViewpoints: ForgeViewpoint[];
+    defaultView: SparkViewpoint;
+    autoViewpoints: SparkViewpoint[];
     private rotateToAccumulator;
     private translateToAccumulator;
     private modifier;
     private lastFrame;
     private lastUpdateTime;
     private defaultCameras;
-    viewpoint: ForgeViewpoint;
+    viewpoint: SparkViewpoint;
     private pendingUpdate;
     private envViewpoint;
     private static cubeRender;
     private static pmrem;
-    constructor(options: ForgeRendererOptions);
+    constructor(options: SparkRendererOptions);
     static makeUniforms(): {
         renderSize: {
             value: THREE.Vector2;
@@ -101,9 +101,9 @@ export declare class ForgeRenderer extends THREE.Mesh {
     private canAllocAccumulator;
     private maybeAllocAccumulator;
     releaseAccumulator(accumulator: SplatAccumulator): void;
-    newViewpoint(options: ForgeViewpointOptions): ForgeViewpoint;
+    newViewpoint(options: SparkViewpointOptions): SparkViewpoint;
     onBeforeRender(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera): void;
-    prepareViewpoint(viewpoint?: ForgeViewpoint): void;
+    prepareViewpoint(viewpoint?: SparkViewpoint): void;
     update({ scene, viewToWorld, }: {
         scene: THREE.Scene;
         viewToWorld?: THREE.Matrix4;
