@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-Copy and paste code below in an `index.html` file or remix in the [Web Playground](https://glitch.com/edit/#!/sparkjs-dev)
+Copy and paste code below in an `index.html` file or remix in the [Web Playground](https://glitch.com/edit/#!/sparkjsdev)
 
 ```html
 <style> body {margin: 0;} </style>
@@ -10,13 +10,13 @@ Copy and paste code below in an `index.html` file or remix in the [Web Playgroun
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjs-dev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
     }
   }
 </script>
 <script type="module">
   import * as THREE from "three";
-  import { SplatMesh } from "@sparkjs-dev/spark";
+  import { SplatMesh } from "@sparkjsdev/spark";
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -39,7 +39,7 @@ Copy and paste code below in an `index.html` file or remix in the [Web Playgroun
 ## Install with NPM
 
 ```shell
-npm install @sparkjs-dev/spark
+npm install @sparkjsdev/spark
 ```
 ## Develop and contribute to Spark
 
