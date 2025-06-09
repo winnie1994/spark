@@ -43,9 +43,20 @@ let hasSparkRenderer = false;
 
 let sparkRendererInstance: SparkRenderer;
 
+function containsSplatMesh(object3D) {
+  let hasSplatMesh = false;
+  if (object3D instanceof SplatMesh) {
+    return true;
+  }
+  object3D.traverse((child) => {
+    hasSplatMesh = hasSplatMesh || child instanceof SplatMesh;
+  });
+  return hasSplatMesh;
+}
+
 const sceneAdd = THREE.Scene.prototype.add;
 THREE.Scene.prototype.add = function (object) {
-  hasSplatMesh = hasSplatMesh || object instanceof SplatMesh;
+  hasSplatMesh = hasSplatMesh || containsSplatMesh(object);
   hasSparkRenderer = hasSparkRenderer || object instanceof SparkRenderer;
   sceneAdd.call(this, object);
   return this;
