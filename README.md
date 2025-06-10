@@ -2,7 +2,7 @@
 
   ![Spark logo](https://github.com/user-attachments/assets/5287631a-083c-4c86-80f6-4dca24aa263f#gh-light-mode-only)
   ![Spark logo](https://github.com/user-attachments/assets/91e8d74b-84a5-4073-bd72-d7228f948dc6#gh-dark-mode-only)
-  
+
   <h3 align="center">An advanced 3D Gaussian Splatting renderer for THREE.js</h3>
   <div align="center">
 
@@ -53,7 +53,7 @@ Copy the following code into an `index.html` file.
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.1/spark.module.js"
     }
   }
 </script>
