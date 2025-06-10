@@ -48,14 +48,14 @@
   <div id="progress-bar">
     <div id="progress-fill"></div>
   </div>
+  <script src="/examples/js/vendor/stats.js/build/stats.min.js"></script>
   <script type="importmap">
     {
       "imports": {
         "three": "/examples/js/vendor/three/build/three.module.js",
         "three/addons/": "/examples/js/vendor/three/examples/jsm/",
-        "@sparkjs-dev/spark": "/dist/spark.module.js",
-        "lil-gui": "../node_modules/lil-gui/dist/lil-gui.esm.js",
-        "stats.js": "../node_modules/stats.js/build/stats.min.js"
+        "@sparkjsdev/spark": "/dist/spark.module.js",
+        "lil-gui": "/examples/js/vendor/lil-gui/dist/lil-gui.esm.js"
       }
     }
   </script>
@@ -67,8 +67,7 @@
     import * as THREE from "three";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
     import { GUI } from "lil-gui";
-    import Stats from "stats.js";
-    import { constructGrid, SparkControls, SparkRenderer, SplatMesh, textSplats, dyno, transcodeSpz } from "@sparkjs-dev/spark";
+    import { constructGrid, SparkControls, SparkRenderer, SplatMesh, textSplats, dyno, transcodeSpz } from "@sparkjsdev/spark";
     import { getAssetFileURL } from "/examples/js/get-asset-url.js";
 
     const scene = new THREE.Scene();

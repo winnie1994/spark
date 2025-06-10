@@ -52,6 +52,44 @@ export default defineConfig(({ mode }) => {
           console.log(`📦 Dev alias active: ${urlPath} → ${filePath}`);
         },
       },
+      {
+        name: "serve-lil-gui-alias",
+        configureServer(server) {
+          const urlPath = "/examples/js/vendor/stats.js/";
+
+          const filePath = path.resolve("node_modules/lil-gui/");
+          server.middlewares.use(urlPath, (req, res, next) => {
+            if (fs.existsSync(filePath)) {
+              res.setHeader("Content-Type", "application/javascript");
+              fs.createReadStream(filePath).pipe(res);
+            } else {
+              res.statusCode = 404;
+              res.end("three.module.js not found");
+            }
+          });
+
+          console.log(`📦 Dev alias active: ${urlPath} → ${filePath}`);
+        },
+      },
+      {
+        name: "serve-statsjs-alias",
+        configureServer(server) {
+          const urlPath = "/examples/js/vendor/stats.js/";
+
+          const filePath = path.resolve("node_modules/stats.js/");
+          server.middlewares.use(urlPath, (req, res, next) => {
+            if (fs.existsSync(filePath)) {
+              res.setHeader("Content-Type", "application/javascript");
+              fs.createReadStream(filePath).pipe(res);
+            } else {
+              res.statusCode = 404;
+              res.end("three.module.js not found");
+            }
+          });
+
+          console.log(`📦 Dev alias active: ${urlPath} → ${filePath}`);
+        },
+      },
     ],
 
     build: {
