@@ -15,8 +15,8 @@
 
    <div align="center">
 
-  [![License](https://img.shields.io/badge/license-MIT-%23d43e4c)](https://github.com/sparkjs-dev/spark/blob/main/LICENSE)
-  [![npm version](https://img.shields.io/npm/v/@sparkjs-dev/spark?color=d43e4c)](https://www.npmjs.com/package/@sparkjs-dev/spark)
+  [![License](https://img.shields.io/badge/license-MIT-%23d43e4c)](https://github.com/sparkjsdev/spark/blob/main/LICENSE)
+  [![npm version](https://img.shields.io/npm/v/@sparkjsdev/spark?color=d43e4c)](https://www.npmjs.com/package/@sparkjsdev/spark)
 
   </div>
 
@@ -53,13 +53,13 @@ Copy the following code into an `index.html` file.
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjs-dev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
     }
   }
 </script>
 <script type="module">
   import * as THREE from "three";
-  import { SplatMesh } from "@sparkjs-dev/spark";
+  import { SplatMesh } from "@sparkjsdev/spark";
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -91,7 +91,7 @@ Remix the [glitch starter template](https://glitch.com/edit/#!/sparkjs-dev)
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjs-dev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
      }
   }
 </script>
@@ -100,7 +100,7 @@ Remix the [glitch starter template](https://glitch.com/edit/#!/sparkjs-dev)
 ### NPM
 
 ```shell
-npm install @sparkjs-dev/spark
+npm install @sparkjsdev/spark
 ```
 
 ## Run Examples locally
@@ -199,7 +199,7 @@ npm run site:serve
 
 ### Deploy Spark website
 
-The following command will generate a static site from the `docs` directory and push it to the [repo](https://github.com/sparkjs-dev/sparkjs-dev.github.io) that hosts the site via `gh-pages`
+The following command will generate a static site from the `docs` directory and push it to the [repo](https://github.com/sparkjsdev/sparkjs-dev.github.io) that hosts the site via `gh-pages`
 
 ```
 npm run site:deploy
