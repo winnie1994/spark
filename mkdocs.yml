@@ -2,6 +2,7 @@ site_name: Spark
 site_url: https://sparkjs.dev/
 theme:
   name: material
+  favicon: assets/images/favicon.png
   custom_dir: docs/overrides
   features:
       - content.code.copy
