@@ -1,8 +1,8 @@
 <p align="center">
 
-  ![Spark logo](https://github.com/user-attachments/assets/d9cec150-8ca1-47f4-b7d9-4782aa629166#gh-dark-mode-only)
-  ![Spark logo](https://github.com/user-attachments/assets/adb2f0d7-df30-49e5-be7f-75c14f008735#gh-light-mode-only)
-
+  ![Spark logo](https://github.com/user-attachments/assets/5287631a-083c-4c86-80f6-4dca24aa263f#gh-light-mode-only)
+  ![Spark logo](https://github.com/user-attachments/assets/91e8d74b-84a5-4073-bd72-d7228f948dc6#gh-dark-mode-only)
+  
   <h3 align="center">An advanced 3D Gaussian Splatting renderer for THREE.js</h3>
   <div align="center">
 
