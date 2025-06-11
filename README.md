@@ -199,7 +199,7 @@ npm run site:serve
 
 ### Deploy Spark website
 
-The following command will generate a static site from the `docs` directory and push it to the [repo](https://github.com/sparkjsdev/sparkjs-dev.github.io) that hosts the site via `gh-pages`
+The following command will generate a static site from the `docs` directory and push it to the [repo](https://github.com/sparkjsdev/sparkjsdev.github.io) that hosts the site via `gh-pages`
 
 ```
 npm run site:deploy
