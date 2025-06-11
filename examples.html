@@ -223,7 +223,7 @@
           if (initialLink) {
             const path = initialLink.getAttribute('href');
             iframe.src = path;
-            codeButton.href = `https://github.com/sparkjs-dev/spark/blob/main${path}`;
+            codeButton.href = `https://github.com/sparkjsdev/spark/blob/main${path}`;
           }
 
           panel.querySelectorAll('.example-link').forEach((link) => {
@@ -234,7 +234,7 @@
 
               document.querySelectorAll('.example-link').forEach(l => l.classList.remove('active'));
               link.classList.add('active');
-              codeButton.href = `https://github.com/sparkjs-dev/spark/blob/main/${path.substring(1)}`;
+              codeButton.href = `https://github.com/sparkjsdev/spark/blob/main/${path.substring(1)}`;
             });
           });
         }
@@ -320,7 +320,7 @@
             link.classList.add('active');
             panel.querySelector(`[href="${path}"]`)?.classList.add('active');
 
-            codeButton.href = `https://github.com/sparkjs-dev/spark/blob/main${path}`;
+            codeButton.href = `https://github.com/sparkjsdev/spark/blob/main${path}`;
             closeMenu();
           }
         });
