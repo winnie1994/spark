@@ -1,3 +1,7 @@
+### 0.1.2 (June 10, 2025)
+
+It removes unnecessary dependencies from npm package.
+
 ### 0.1.1 (June 10, 2025)
 
 ### Bug fixes
