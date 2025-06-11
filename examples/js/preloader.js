@@ -21,7 +21,7 @@ function removeLoader() {
 }
 
 // preload splats, returning a map [filename -> SplatMesh]
-export async function preloadSplats(assets, loading_icon_color = "black") {
+export async function preloadSplats(assets, loading_icon_color = "white") {
   addLoader(loading_icon_color);
   const map = {};
   await Promise.all(
