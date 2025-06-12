@@ -1,3 +1,7 @@
+### 0.1.3 (June 11, 2025)
+
+Fix types export in npm package.
+
 ### 0.1.2 (June 10, 2025)
 
 It removes unnecessary dependencies from npm package.
