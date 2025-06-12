@@ -53,7 +53,7 @@ Copy the following code into an `index.html` file.
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.2/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.3/spark.module.js"
     }
   }
 </script>
