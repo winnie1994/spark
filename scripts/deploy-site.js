@@ -1,14 +1,11 @@
 import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
 import { rm } from "node:fs/promises";
-import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const siteRemoteURL = "git@github.com:sparkjsdev/sparkjsdev.github.io.git";
 const siteRepoDir = "site-repo";
 const siteBuild = "site";
-
-await writeFile(`${siteBuild}/CNAME`, "sparkjs.dev\n");
 
 function run(cmd, options = {}) {
   console.log(`> ${cmd}`);
@@ -55,17 +52,17 @@ async function emptyDirectory(directoryPath) {
   }
 }
 
-// try {
-//   await fs.access(siteRepoDir);
-// } catch {
-//   run(`git clone ${siteRemoteURL} ${siteRepoDir}`);
-// }
+try {
+  await fs.access(siteRepoDir);
+} catch {
+  run(`git clone ${siteRemoteURL} ${siteRepoDir}`);
+}
 
-// run("git reset --hard", { cwd: siteRepoDir });
-// run("git fetch origin", { cwd: siteRepoDir });
-// run("git merge --ff-only origin/main", { cwd: siteRepoDir });
-// await emptyDirectory(siteRepoDir);
-// await copyDir(siteBuild, siteRepoDir);
-// run("git add .", { cwd: siteRepoDir });
-// run('git commit -m "Update Spark site"', { cwd: siteRepoDir });
-// run("git push origin main", { cwd: siteRepoDir });
+run("git reset --hard", { cwd: siteRepoDir });
+run("git fetch origin", { cwd: siteRepoDir });
+run("git merge --ff-only origin/main", { cwd: siteRepoDir });
+await emptyDirectory(siteRepoDir);
+await copyDir(siteBuild, siteRepoDir);
+run("git add .", { cwd: siteRepoDir });
+run('git commit -m "Update Spark site"', { cwd: siteRepoDir });
+run("git push origin main", { cwd: siteRepoDir });

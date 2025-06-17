@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { copyFile, mkdir, rename } from "node:fs/promises";
+import { copyFile, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 function copyDir(src, dest) {
@@ -21,6 +21,9 @@ function copyDir(src, dest) {
 
 // Copy static files to docs directory.
 copyDir("examples", "docs/examples");
+
+// Create CNAME file
+await writeFile("docs/CNAME", "sparkjs.dev\n");
 await copyFile("examples.html", "docs/examples/index.html");
 await rename("docs/examples/viewer", "docs/viewer");
 await mkdir("docs/examples/vendor", { recursive: true });
