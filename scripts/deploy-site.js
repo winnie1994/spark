@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import { rm } from "node:fs/promises";
 import path from "node:path";
 
-const siteRemoteURL = "git@github.com:sparkjs-dev/sparkjs-dev.github.io.git";
+const siteRemoteURL = "git@github.com:sparkjsdev/sparkjsdev.github.io.git";
 const siteRepoDir = "site-repo";
 const siteBuild = "site";
 
