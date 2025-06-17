@@ -32,62 +32,36 @@ export default defineConfig(({ mode }) => {
       }),
 
       dts({ outDir: "dist/types" }),
-
       {
-        name: "serve-three-alias",
+        name: "serve-node-modules-alias",
         configureServer(server) {
-          const urlPath = "/examples/js/vendor/three/";
+          const baseUrlPath = "/examples/js/vendor/";
 
-          const filePath = path.resolve("node_modules/three/");
-          server.middlewares.use(urlPath, (req, res, next) => {
-            if (fs.existsSync(filePath)) {
-              res.setHeader("Content-Type", "application/javascript");
-              fs.createReadStream(filePath).pipe(res);
+          server.middlewares.use((req, res, next) => {
+            if (!req.url.startsWith(baseUrlPath)) return next();
+
+            const relModulePath = req.url.slice(baseUrlPath.length); // safe substring
+            const absPath = path.resolve("node_modules", relModulePath);
+
+            if (fs.existsSync(absPath) && fs.statSync(absPath).isFile()) {
+              const ext = path.extname(absPath);
+              const contentType =
+                {
+                  ".js": "application/javascript",
+                  ".mjs": "application/javascript",
+                  ".css": "text/css",
+                  ".json": "application/json",
+                }[ext] || "application/octet-stream";
+
+              res.setHeader("Content-Type", contentType);
+              fs.createReadStream(absPath).pipe(res);
             } else {
               res.statusCode = 404;
-              res.end("three.module.js not found");
+              res.end(`Not found: ${relModulePath}`);
             }
           });
 
-          console.log(`📦 Dev alias active: ${urlPath} → ${filePath}`);
-        },
-      },
-      {
-        name: "serve-lil-gui-alias",
-        configureServer(server) {
-          const urlPath = "/examples/js/vendor/stats.js/";
-
-          const filePath = path.resolve("node_modules/lil-gui/");
-          server.middlewares.use(urlPath, (req, res, next) => {
-            if (fs.existsSync(filePath)) {
-              res.setHeader("Content-Type", "application/javascript");
-              fs.createReadStream(filePath).pipe(res);
-            } else {
-              res.statusCode = 404;
-              res.end("three.module.js not found");
-            }
-          });
-
-          console.log(`📦 Dev alias active: ${urlPath} → ${filePath}`);
-        },
-      },
-      {
-        name: "serve-statsjs-alias",
-        configureServer(server) {
-          const urlPath = "/examples/js/vendor/stats.js/";
-
-          const filePath = path.resolve("node_modules/stats.js/");
-          server.middlewares.use(urlPath, (req, res, next) => {
-            if (fs.existsSync(filePath)) {
-              res.setHeader("Content-Type", "application/javascript");
-              fs.createReadStream(filePath).pipe(res);
-            } else {
-              res.statusCode = 404;
-              res.end("three.module.js not found");
-            }
-          });
-
-          console.log(`📦 Dev alias active: ${urlPath} → ${filePath}`);
+          console.log(`📦 Dev alias active: ${baseUrlPath} → node_modules/*`);
         },
       },
     ],
