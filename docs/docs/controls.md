@@ -1,6 +1,6 @@
 # Controls
 
-TEST. A program using `Spark` can use any camera control scheme that is compatible with THREE.js and will typically manipulate a `THREE.Camera` object's transform. `Spark` also ships with simple, intuitive controls for navigating 3D space that use the keyboard + mouse, game pad, or mobile multi-touch. To add these controls, you can create a `SparkControls` instance:
+A program using `Spark` can use any camera control scheme that is compatible with THREE.js and will typically manipulate a `THREE.Camera` object's transform. `Spark` also ships with simple, intuitive controls for navigating 3D space that use the keyboard + mouse, game pad, or mobile multi-touch. To add these controls, you can create a `SparkControls` instance:
 
 ```typescript
 const controls = new SparkControls({
