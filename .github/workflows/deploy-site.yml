@@ -40,5 +40,5 @@ jobs:
           external_repository: sparkjsdev/sparkjsdev.github.io
           publish_branch: main
           publish_dir: ./site
-          github_token: ${{ steps.generate-token.outputs.token }}
+          personal_token: ${{ steps.generate-token.outputs.token }}
           commit_message: "Deploy Spark site – ${{ github.sha }}"
