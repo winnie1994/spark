@@ -91,7 +91,7 @@ Remix the [glitch starter template](https://glitch.com/edit/#!/sparkjs-dev)
   {
     "imports": {
       "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.2.0/spark.module.js"
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.3/spark.module.js"
      }
   }
 </script>
