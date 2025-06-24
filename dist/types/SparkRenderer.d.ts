@@ -13,6 +13,8 @@ export type SparkRendererOptions = {
     enable2DGS?: boolean;
     preBlurAmount?: number;
     blurAmount?: number;
+    focalDistance?: number;
+    apertureAngle?: number;
     falloff?: number;
     clipXY?: number;
     view?: SparkViewpointOptions;
@@ -28,6 +30,8 @@ export declare class SparkRenderer extends THREE.Mesh {
     enable2DGS: boolean;
     preBlurAmount: number;
     blurAmount: number;
+    focalDistance: number;
+    apertureAngle: number;
     falloff: number;
     clipXY: number;
     time?: number;
@@ -73,6 +77,12 @@ export declare class SparkRenderer extends THREE.Mesh {
             value: number;
         };
         blurAmount: {
+            value: number;
+        };
+        focalDistance: {
+            value: number;
+        };
+        apertureAngle: {
             value: number;
         };
         falloff: {

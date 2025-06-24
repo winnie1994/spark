@@ -74,6 +74,7 @@ export declare class PointerControls {
     reverseScroll: boolean;
     moveInertia: number;
     rotateInertia: number;
+    pointerRollScale: number;
     enable: boolean;
     doublePress: ({ position, intervalMs, }: {
         position: THREE.Vector2;
@@ -91,7 +92,7 @@ export declare class PointerControls {
     scroll: THREE.Vector3;
     rotateVelocity: THREE.Vector3;
     moveVelocity: THREE.Vector3;
-    constructor({ canvas, rotateSpeed, slideSpeed, scrollSpeed, swapRotateSlide, reverseRotate, reverseSlide, reverseSwipe, reverseScroll, moveInertia, rotateInertia, doublePress, }: {
+    constructor({ canvas, rotateSpeed, slideSpeed, scrollSpeed, swapRotateSlide, reverseRotate, reverseSlide, reverseSwipe, reverseScroll, moveInertia, rotateInertia, pointerRollScale, doublePress, }: {
         canvas: HTMLCanvasElement;
         rotateSpeed?: number;
         slideSpeed?: number;
@@ -103,6 +104,7 @@ export declare class PointerControls {
         reverseScroll?: boolean;
         moveInertia?: number;
         rotateInertia?: number;
+        pointerRollScale?: number;
         doublePress?: ({ position, intervalMs, }: {
             position: THREE.Vector2;
             intervalMs: number;

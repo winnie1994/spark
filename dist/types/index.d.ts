@@ -13,6 +13,7 @@ export { SplatSkinning, type SplatSkinningOptions } from './SplatSkinning';
 export { SplatEdit, type SplatEditOptions, SplatEditSdf, type SplatEditSdfOptions, SplatEditSdfType, SplatEditRgbaBlendMode, SplatEdits, } from './SplatEdit';
 export { constructGrid, constructAxes, constructSpherePoints, imageSplats, textSplats, } from './splatConstructors';
 export * as generators from './generators';
+export * as modifiers from './modifiers';
 export { VRButton } from './vrButton';
 export { type JointId, JointEnum, JOINT_IDS, NUM_JOINTS, JOINT_INDEX, JOINT_RADIUS, JOINT_SEGMENTS, JOINT_SEGMENT_STEPS, JOINT_TIPS, FINGER_TIPS, Hand, HANDS, type Joint, type HandJoints, type HandsJoints, XrHands, HandMovement, } from './hands';
 export { SparkControls, FpsMovement, PointerControls } from './controls';

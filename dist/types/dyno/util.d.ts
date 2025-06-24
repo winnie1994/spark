@@ -13,6 +13,7 @@ export declare const hashFloat: <T extends ValueTypes>(value: DynoVal<T>) => Dyn
 export declare const hashVec2: <T extends ValueTypes>(value: DynoVal<T>) => DynoVal<"vec2">;
 export declare const hashVec3: <T extends ValueTypes>(value: DynoVal<T>) => DynoVal<"vec3">;
 export declare const hashVec4: <T extends ValueTypes>(value: DynoVal<T>) => DynoVal<"vec4">;
+export declare const normalizedDepth: (z: DynoVal<"float">, zNear: DynoVal<"float">, zFar: DynoVal<"float">) => DynoVal<"float">;
 export declare class DynoRemapIndex extends Dyno<{
     from: "int";
     to: "int";
@@ -136,4 +137,18 @@ export declare class HashVec4<T extends ValueTypes> extends DynoBlock<{
         value: DynoVal<T>;
     });
     dynoOut(): DynoValue<"vec4">;
+}
+export declare class NormalizedDepth extends Dyno<{
+    z: "float";
+    zNear: "float";
+    zFar: "float";
+}, {
+    depth: "float";
+}> implements HasDynoOut<"float"> {
+    constructor({ z, zNear, zFar, }: {
+        z: DynoVal<"float">;
+        zNear: DynoVal<"float">;
+        zFar: DynoVal<"float">;
+    });
+    dynoOut(): DynoValue<"float">;
 }
