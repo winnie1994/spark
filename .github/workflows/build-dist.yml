@@ -32,7 +32,7 @@ jobs:
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Commit and push changes
-        run:
+        run: |
           git add .
           git commit -m "Bump dist build"
           git push origin main
