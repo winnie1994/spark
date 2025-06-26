@@ -36,11 +36,11 @@ jobs:
           private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Commit and push changes
-       run: |
-         git add .
-         git commit -m "Bump dist build"
-         git push origin main
-         git rev-parse HEAD > dist/commit.txt
-         SHA=$(cat dist/commit.txt)
-         git add dist/commit.txt
-         git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
+        run:
+          git add .
+          git commit -m "Bump dist build"
+          git push origin main
+          git rev-parse HEAD > dist/commit.txt
+          SHA=$(cat dist/commit.txt)
+          git add dist/commit.txt
+          git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
