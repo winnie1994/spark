@@ -18,7 +18,7 @@ const DEFAULT_POINTER_ROLL_SCALE = 1.0;
 const DUAL_PRESS_MS = 200;
 // Time limit for double-click/double-tap
 const DOUBLE_PRESS_LIMIT_MS = 400;
-// Distance limit for double-click
+// Distance limit for double-click.
 const DOUBLE_PRESS_DISTANCE = 50;
 
 // Standard WASD movement keys with R+F for up/down
