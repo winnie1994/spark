@@ -9,7 +9,7 @@ jobs:
   build-dist:
     runs-on: ubuntu-latest
 
-   steps:
+    steps:
       - name: Generate GitHub App token
         id: generate-token
         uses: tibdex/github-app-token@v2
@@ -44,10 +44,9 @@ jobs:
           git commit -m "Bump dist build" || echo "No build changes"
 
           SHA=$(git rev-parse HEAD)
-          mkdir -p dist
           echo "$SHA" > dist/commit.txt
 
           git add dist/commit.txt
-          git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)" || echo "No SHA change"
+          git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
 
           git push origin HEAD:main
