@@ -1,0 +1,46 @@
+name: Build dist
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install mkdocs
+        run: pip install mkdocs-material
+
+      - name: Build Dist
+        run: npm run build
+
+
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Commit and push changes
+       run: |
+         git add .
+         git commit -m "Bump dist build"
+         git push origin main
+         git rev-parse HEAD > dist/commit.txt
+         SHA=$(cat dist/commit.txt)
+         git add dist/commit.txt
+         git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
