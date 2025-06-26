@@ -33,7 +33,7 @@ jobs:
 
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -43,5 +43,5 @@ jobs:
           SHA=$(git rev-parse HEAD)
           git add dist/commit.txt
           git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
-          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}" HEAD:main
+          git push "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}" HEAD:main
 
