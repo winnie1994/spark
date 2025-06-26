@@ -21,12 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install mkdocs
-        run: pip install mkdocs-material
-
       - name: Build Dist
         run: npm run build
-
 
       - name: Generate GitHub App token
         id: generate-token
@@ -41,6 +37,6 @@ jobs:
           git commit -m "Bump dist build"
           git push origin main
           git rev-parse HEAD > dist/commit.txt
-          SHA=$(cat dist/commit.txt)
+          SHA=$(git rev-parse HEAD)
           git add dist/commit.txt
           git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
