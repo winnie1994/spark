@@ -43,5 +43,6 @@ jobs:
           SHA=$(git rev-parse HEAD)
           git add dist/commit.txt
           git commit -m "Update main CDN URL. (https://cdn.jsdelivr.net/gh/sparkjsdev/spark@$SHA/dist/spark.module.js)"
-          git push "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}" HEAD:main
+          git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}"
+          git push origin HEAD:main
 
