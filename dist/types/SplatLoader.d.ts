@@ -4,22 +4,65 @@ import { SplatMesh } from './SplatMesh';
 export declare class SplatLoader extends Loader {
     fileLoader: FileLoader;
     fileType?: SplatFileType;
+    packedSplats?: PackedSplats;
     constructor(manager?: LoadingManager);
     load(url: string, onLoad?: (decoded: PackedSplats) => void, onProgress?: (event: ProgressEvent) => void, onError?: (error: unknown) => void): void;
     loadAsync(url: string, onProgress?: (event: ProgressEvent) => void): Promise<PackedSplats>;
+    loadExtra(url: string): Promise<ArrayBuffer>;
     parse(packedSplats: PackedSplats): SplatMesh;
 }
 export declare enum SplatFileType {
     PLY = "ply",
     SPZ = "spz",
     SPLAT = "splat",
-    KSPLAT = "ksplat"
+    KSPLAT = "ksplat",
+    PCSOGS = "pcsogs"
 }
 export declare function getSplatFileType(fileBytes: Uint8Array): SplatFileType | undefined;
 export declare function getFileExtension(pathOrUrl: string): string;
 export declare function getSplatFileTypeFromPath(pathOrUrl: string): SplatFileType | undefined;
-export declare function unpackSplats({ input, fileType, pathOrUrl, }: {
+export type PcSogsJson = {
+    means: {
+        shape: number[];
+        dtype: string;
+        mins: number[];
+        maxs: number[];
+        files: string[];
+    };
+    scales: {
+        shape: number[];
+        dtype: string;
+        mins: number[];
+        maxs: number[];
+        files: string[];
+    };
+    quats: {
+        shape: number[];
+        dtype: string;
+        encoding?: string;
+        files: string[];
+    };
+    sh0: {
+        shape: number[];
+        dtype: string;
+        mins: number[];
+        maxs: number[];
+        files: string[];
+    };
+    shN: {
+        shape: number[];
+        dtype: string;
+        mins: number;
+        maxs: number;
+        quantization: number;
+        files: string[];
+    };
+};
+export declare function isPcSogs(input: ArrayBuffer | Uint8Array | string): boolean;
+export declare function tryPcSogs(input: ArrayBuffer | Uint8Array | string): PcSogsJson | undefined;
+export declare function unpackSplats({ input, extraFiles, fileType, pathOrUrl, }: {
     input: Uint8Array | ArrayBuffer;
+    extraFiles?: Record<string, ArrayBuffer>;
     fileType?: SplatFileType;
     pathOrUrl?: string;
 }): Promise<{

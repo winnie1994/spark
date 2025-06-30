@@ -43,6 +43,7 @@ export declare function setPackedSplat(packedSplats: Uint32Array, index: number,
 export declare function setPackedSplatCenter(packedSplats: Uint32Array, index: number, x: number, y: number, z: number): void;
 export declare function setPackedSplatScales(packedSplats: Uint32Array, index: number, scaleX: number, scaleY: number, scaleZ: number): void;
 export declare function setPackedSplatQuat(packedSplats: Uint32Array, index: number, quatX: number, quatY: number, quatZ: number, quatW: number): void;
+export declare function setPackedSplatRgba(packedSplats: Uint32Array, index: number, r: number, g: number, b: number, a: number): void;
 export declare function setPackedSplatRgb(packedSplats: Uint32Array, index: number, r: number, g: number, b: number): void;
 export declare function setPackedSplatOpacity(packedSplats: Uint32Array, index: number, opacity: number): void;
 export declare function unpackSplat(packedSplats: Uint32Array, index: number): {
