@@ -9806,7 +9806,9 @@ const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
         viewpoint.target.height
       );
     } else {
-      const renderSize = renderer.getSize(this.uniforms.renderSize.value);
+      const renderSize = renderer.getDrawingBufferSize(
+        this.uniforms.renderSize.value
+      );
       if (renderSize.x === 1 && renderSize.y === 1) {
         const baseLayer = (_a2 = renderer.xr.getSession()) == null ? void 0 : _a2.renderState.baseLayer;
         if (baseLayer) {
