@@ -34,6 +34,16 @@ export declare class SparkRenderer extends THREE.Mesh {
     apertureAngle: number;
     falloff: number;
     clipXY: number;
+    renderScale: number;
+    splatTexture: null | {
+        enable?: boolean;
+        texture?: THREE.Data3DTexture;
+        multiply?: THREE.Matrix2;
+        add?: THREE.Vector2;
+        near?: number;
+        far?: number;
+        mid?: number;
+    };
     time?: number;
     deltaTime?: number;
     clock: THREE.Clock;
@@ -53,10 +63,17 @@ export declare class SparkRenderer extends THREE.Mesh {
     private envViewpoint;
     private static cubeRender;
     private static pmrem;
+    static EMPTY_SPLAT_TEXTURE: THREE.Data3DTexture;
     constructor(options: SparkRendererOptions);
     static makeUniforms(): {
         renderSize: {
             value: THREE.Vector2;
+        };
+        near: {
+            value: number;
+        };
+        far: {
+            value: number;
         };
         numSplats: {
             value: number;
@@ -89,6 +106,31 @@ export declare class SparkRenderer extends THREE.Mesh {
             value: number;
         };
         clipXY: {
+            value: number;
+        };
+        renderScale: {
+            value: number;
+        };
+        splatTexEnable: {
+            value: boolean;
+        };
+        splatTexture: {
+            type: string;
+            value: THREE.Data3DTexture;
+        };
+        splatTexMul: {
+            value: THREE.Matrix2;
+        };
+        splatTexAdd: {
+            value: THREE.Vector2;
+        };
+        splatTexNear: {
+            value: number;
+        };
+        splatTexFar: {
+            value: number;
+        };
+        splatTexMid: {
             value: number;
         };
         packedSplats: {
