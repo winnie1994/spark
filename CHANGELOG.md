@@ -1,3 +1,20 @@
+### 0.1.5 (July 1, 2025)
+
+Visual quality improvements and [SOGS](https://blog.playcanvas.com/playcanvas-adopts-sogs-for-20x-3dgs-compression/) support
+
+### Enhancements
+
+- Add support for [SOGS](https://blog.playcanvas.com/playcanvas-adopts-sogs-for-20x-3dgs-compression/) compression format 3D Gaussian Splatting (#73) (@asundqui)
+- Change splat shapes by using any RGBA texture to compute the Gaussian falloff (#79) (@asundqui)
+- Use RenderTarget properties to reduce manual render state tracking (#80) (@mrxz)
+
+### Bug fixes
+
+- Visual quality, Fix .ksplat decoding (fix #66) (@asundqui)
+- Visual quality, Fix Spherical Harmonics not included in SPZ transcoding (fix #66) (#83) (@asundqui)
+- Visual quality, Fix incorrect calculation of renderer size. Especially improves rendering in high DPI displays (#71) (@mrxz)
+- Fix support of compressed .ply files exported from SuperSplat. Newer versions include min/max_r/g/b properties in the header that were not parsed (#82) (@asundqui)
+
 ### 0.1.4 (June 24, 2025)
 
 ### Enhancements
