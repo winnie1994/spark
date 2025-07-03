@@ -11,9 +11,19 @@
       width: 100%;
       background-color: black;
     }
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      outline: none; /* Remove default focus outline */
+      touch-action: none;
+    }
   </style>
 </head>
 <body>
+  <canvas id="canvas" tabindex="0"></canvas>
   <script type="importmap">
     {
       "imports": {
@@ -208,10 +218,9 @@
       return splatMesh;
     }
 
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    const canvas = document.getElementById("canvas");
+    const renderer = new THREE.WebGLRenderer({ canvas });
     renderer.setClearColor(new THREE.Color(0x000000), 1);
-    document.body.appendChild(renderer.domElement)
 
     const scene = new THREE.Scene();
     const spark = new SparkRenderer({
@@ -231,8 +240,8 @@
 
     const sparkControls = new SparkControls({ canvas: renderer.domElement });
     function handleResize() {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
