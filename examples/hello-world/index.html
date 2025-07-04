@@ -37,9 +37,12 @@
     butterfly.position.set(0, 0, -3);
     scene.add(butterfly);
 
+    let lastTime;
     renderer.setAnimationLoop(function animate(time) {
+      const deltaTime = time - (lastTime || time);
+      lastTime = time;
       renderer.render(scene, camera);
-      butterfly.rotation.y += 0.01;
+      butterfly.rotation.y += deltaTime / 2500;
     });
   </script>
 </body>
