@@ -80,10 +80,12 @@
     duck.position.set(0, 0.45, -0.4);
     scene.add(duck);
 
-    let renderedEnvMap = false;
+    let lastTime;
     renderer.setAnimationLoop(function animate(time) {
+      const deltaTime = time - (lastTime || time);
+      lastTime = time;
       renderer.render(scene, camera);
-      duck.rotation.y += 0.01;
+      duck.rotation.y += deltaTime / 2500;
 
       // Make sure we only launch async renderEnvMap once
       if (!renderedEnvMap) {

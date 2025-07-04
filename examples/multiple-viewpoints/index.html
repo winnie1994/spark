@@ -106,10 +106,13 @@
       await createViewpoint(new THREE.Vector3(0.5, -1, -3), new THREE.Vector2(0.5, -0.5), 1),
     ];
 
+    let lastTime;
     renderer.setAnimationLoop(function animate(time) {
+      const deltaTime = time - (lastTime || time);
+      lastTime = time;
       scene.background.set(0x000000);
       renderer.render(scene, camera);
-      butterfly.rotation.y += 0.01;
+      butterfly.rotation.y += deltaTime / 2500;
 
       // Render each viewpoint (with a different background each)
       for (let i = 0; i < viewpoints.length; i++) {

@@ -50,9 +50,12 @@
     modifiers.setDepthColor(butterfly2, 1, 2, true);
     scene.add(butterfly2);
 
+    let lastTime;
     renderer.setAnimationLoop(function animate(time) {
-      butterfly.rotation.y += 0.01;
-      butterfly2.rotation.x += 0.01;
+      const deltaTime = time - (lastTime || time);
+      lastTime = time;
+      butterfly.rotation.y += deltaTime / 2500;
+      butterfly2.rotation.x += deltaTime / 2500;
       renderer.render(scene, camera);
     });
   </script>
