@@ -10150,7 +10150,7 @@ const _SparkRenderer = class _SparkRenderer extends THREE.Mesh {
       map.set(record.node, record);
       return map;
     }, /* @__PURE__ */ new Map());
-    const { generators: generators2, globalEdits } = this.compileScene(scene);
+    const { generators: generators2, visibleGenerators, globalEdits } = this.compileScene(scene);
     for (const object of generators2) {
       (_a2 = object.frameUpdate) == null ? void 0 : _a2.call(object, {
         object,
@@ -10160,9 +10160,11 @@ const _SparkRenderer = class _SparkRenderer extends THREE.Mesh {
         globalEdits
       });
     }
+    const visibleGenHash = new Set(visibleGenerators.map((g) => g.uuid));
     for (const object of generators2) {
       const current = activeMapping.get(object);
-      const numSplats = object.generator ? object.numSplats : 0;
+      const isVisible = object.generator && visibleGenHash.has(object.uuid);
+      const numSplats = isVisible ? object.numSplats : 0;
       if (object.generator !== (current == null ? void 0 : current.generator) || numSplats !== (current == null ? void 0 : current.count)) {
         object.updateVersion();
       }
@@ -10188,7 +10190,7 @@ const _SparkRenderer = class _SparkRenderer extends THREE.Mesh {
         maxDistance: 1e-5,
         minCoorient: 0.99999
       });
-      const sorted = generators2.map((g, gIndex) => {
+      const sorted = visibleGenerators.map((g, gIndex) => {
         const lastGen = activeMapping.get(g);
         return !lastGen ? [Number.POSITIVE_INFINITY, g.version, g] : (
           // Sort by version deltas then by previous ordering in the mapping,
@@ -10249,6 +10251,12 @@ const _SparkRenderer = class _SparkRenderer extends THREE.Mesh {
         generators2.push(node);
       }
     });
+    const visibleGenerators = [];
+    scene.traverseVisible((node) => {
+      if (node instanceof SplatGenerator) {
+        visibleGenerators.push(node);
+      }
+    });
     const globalEdits = /* @__PURE__ */ new Set();
     scene.traverseVisible((node) => {
       if (node instanceof SplatEdit) {
@@ -10261,7 +10269,11 @@ const _SparkRenderer = class _SparkRenderer extends THREE.Mesh {
         }
       }
     });
-    return { generators: generators2, globalEdits: Array.from(globalEdits) };
+    return {
+      generators: generators2,
+      visibleGenerators,
+      globalEdits: Array.from(globalEdits)
+    };
   }
   // Renders out the scene to an environment map that can be used for
   // Image-based lighting or similar applications. First optionally updates Gsplats,
