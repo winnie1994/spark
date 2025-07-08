@@ -95,8 +95,28 @@
     "url": "https://sparkjs.dev/assets/splats/cat.spz",
     "directory": "splats"
   },
+  "dessert.spz": {
+    "url": "https://sparkjs.dev/assets/splats/dessert.spz",
+    "directory": "splats"
+  },
+  "penguin.spz": {
+    "url": "https://sparkjs.dev/assets/splats/penguin.spz",
+    "directory": "splats"
+  },
+  "woobles.spz": {
+    "url": "https://sparkjs.dev/assets/splats/woobles.spz",
+    "directory": "splats"
+  },
   "arrow.glb": {
     "url": "https://sparkjs.dev/assets/models/arrow.glb",
+    "directory": "models"
+  },
+  "dali-env.glb": {
+    "url": "https://sparkjs.dev/assets/models/dali-env.glb",
+    "directory": "models"
+  },
+  "dali-table.glb": {
+    "url": "https://sparkjs.dev/assets/models/dali-table.glb",
     "directory": "models"
   },
   "valley.spz": {
