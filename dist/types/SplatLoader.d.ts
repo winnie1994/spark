@@ -16,7 +16,8 @@ export declare enum SplatFileType {
     SPZ = "spz",
     SPLAT = "splat",
     KSPLAT = "ksplat",
-    PCSOGS = "pcsogs"
+    PCSOGS = "pcsogs",
+    PCSOGSZIP = "pcsogszip"
 }
 export declare function getSplatFileType(fileBytes: Uint8Array): SplatFileType | undefined;
 export declare function getFileExtension(pathOrUrl: string): string;
@@ -49,7 +50,7 @@ export type PcSogsJson = {
         maxs: number[];
         files: string[];
     };
-    shN: {
+    shN?: {
         shape: number[];
         dtype: string;
         mins: number;
@@ -60,6 +61,10 @@ export type PcSogsJson = {
 };
 export declare function isPcSogs(input: ArrayBuffer | Uint8Array | string): boolean;
 export declare function tryPcSogs(input: ArrayBuffer | Uint8Array | string): PcSogsJson | undefined;
+export declare function tryPcSogsZip(input: ArrayBuffer | Uint8Array): {
+    name: string;
+    json: PcSogsJson;
+} | undefined;
 export declare function unpackSplats({ input, extraFiles, fileType, pathOrUrl, }: {
     input: Uint8Array | ArrayBuffer;
     extraFiles?: Record<string, ArrayBuffer>;
