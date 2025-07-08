@@ -46,24 +46,24 @@
     import { getAssetFileURL } from "/examples/js/get-asset-url.js";
     import { GUI } from "lil-gui";
 
-    const TEST_ASSETS = [
+    const splatFiles = [
       "penguin.spz",
       "dessert.spz",
       "woobles.spz",
     ];
-    const SCENE_GLB = "dali_table.glb"
-    const SKY_SPHERE_GLB = "dali_env.glb"
+    const sceneFile = "dali-table.glb"
+    const skyFile = "dali-env.glb"
 
     const PARAMETERS = {
-      splat_coverage: 1.0,
-      sphere_radius: 1.0,
-      sphere_height: 2.0,
-      speed_multipler: 1.0,
+      splatCoverage: 1.0,
+      spereRadius: 1.0,
+      sphereHeight: 2.0,
+      speedMultiplier: 1.0,
       rotation: true,
       pause: false,
     };
-    
-    function getTransitionState(t, fade_in_time, fade_out_time, period) {
+
+    function getTransitionState(t, fadeInTime, fadeOutTime, period) {
       // inputs:
       // unnormalized time t
       // fade in and fade out (assumed to take 1.0 unnormalized time units)
@@ -73,75 +73,75 @@
       // dynobool for whether transition is fading in or out
       // dynofloat for the normalized time of the transition
       const dynoOne = dyno.dynoFloat(1.0);
-      const wrap_t = dyno.mod(t, period);
-      const norm_t = dyno.mod(t, dynoOne);
-      const is_fade_in = dyno.and(
-        dyno.greaterThan(wrap_t, fade_in_time),
-        dyno.lessThan(wrap_t, dyno.add(fade_in_time, dynoOne)), 
+      const wrapT = dyno.mod(t, period);
+      const normT= dyno.mod(t, dynoOne);
+      const isFadeIn = dyno.and(
+        dyno.greaterThan(wrapT, fadeInTime),
+        dyno.lessThan(wrapT, dyno.add(fadeInTime, dynoOne)),
       );
-      const is_fade_out = dyno.and(
-        dyno.greaterThan(wrap_t, fade_out_time),
-        dyno.lessThan(wrap_t, dyno.add(fade_out_time, dynoOne)), 
+      const isFadeOut = dyno.and(
+        dyno.greaterThan(wrapT, fadeOutTime),
+        dyno.lessThan(wrapT, dyno.add(fadeOutTime, dynoOne)),
       );
-      const in_transition = dyno.or(is_fade_in, is_fade_out);
-      return { in_transition, is_fade_in, norm_t };
+      const inTransition = dyno.or(isFadeIn, isFadeOut);
+      return { inTransition, isFadeIn, normT};
     }
 
     function contractionDyno() {
       // this is a looping shader that periodically contracts and expands the splat.
       // t is assumed to be in normalized time [0, 1], any retiming should be done before this function.
-      // fade_in is a boolean that indicates whether the splat is fading in or out.
+      // fadeIn is a boolean that indicates whether the splat is fading in or out.
       return new dyno.Dyno({
-        inTypes: { 
-          gsplat: dyno.Gsplat, 
-          in_transition: "bool", 
-          fade_in: "bool", 
-          t: "float", 
-          splat_scale: "float", 
-          sphere_radius: "float",
-          sphere_height: "float",
+        inTypes: {
+          gsplat: dyno.Gsplat,
+          inTransition: "bool",
+          fadeIn: "bool",
+          t: "float",
+          splatScale: "float",
+          spereRadius: "float",
+          sphereHeight: "float",
         },
         outTypes: { gsplat: dyno.Gsplat },
         globals: () => [
           dyno.unindent(`
-          vec3 applyCenter(vec3 center, float t, float sphere_radius, float sphere_height) {
-            float height_modifier = 0.5 + 0.5 * pow(abs(1.0 - 2.0*t), 0.2);
-            vec3 target_center = vec3(0.0, height_modifier * sphere_height, 0.0);
-            vec3 dir = normalize(center - target_center);
-            vec3 target_point = target_center + dir * sphere_radius;
+          vec3 applyCenter(vec3 center, float t, float spereRadius, float sphereHeight) {
+            float heightModifier = 0.5 + 0.5 * pow(abs(1.0 - 2.0*t), 0.2);
+            vec3 targetCenter = vec3(0.0, heightModifier * sphereHeight, 0.0);
+            vec3 dir = normalize(center - targetCenter);
+            vec3 targetPoint = targetCenter + dir * spereRadius;
             if (t < 0.25 || t > 0.75) {
               return center;
             } else if (t < 0.45) {
-              return mix(center, target_point, pow((t - 0.25) * 5.0, 4.0));
+              return mix(center, targetPoint, pow((t - 0.25) * 5.0, 4.0));
             } else if (t < 0.55) {
               float churn = 0.1;
-              float transition_t = (t - 0.45) * 10.0;
-              float angle = transition_t * 2.0 * PI;
+              float transitionT = (t - 0.45) * 10.0;
+              float angle = transitionT * 2.0 * PI;
               vec3 rotvec = vec3(sin(angle), 0.0, cos(angle));
-              float strength = sin(transition_t * PI);
-              return target_point + cross(dir, rotvec) * churn * strength; 
+              float strength = sin(transitionT * PI);
+              return targetPoint + cross(dir, rotvec) * churn * strength;
             } else {
-              return mix(target_point, center, pow((t - 0.55) * 5.0, 4.0));
+              return mix(targetPoint, center, pow((t - 0.55) * 5.0, 4.0));
             }
           }
 
-          vec3 applyScale(vec3 scales, float t, float target_scale) {
-            vec3 target_scales = target_scale * vec3(1.0, 1.0, 1.0);
+          vec3 applyScale(vec3 scales, float t, float targetScale) {
+            vec3 targetScales = targetScale * vec3(1.0, 1.0, 1.0);
             if (t < 0.25) {
               return scales;
             } else if (t < 0.45) {
-              return mix(scales, target_scales, pow((t - 0.25) * 5.0, 2.0));
+              return mix(scales, targetScales, pow((t - 0.25) * 5.0, 2.0));
             } else if (t < 0.55) {
-              return target_scales;
+              return targetScales;
             } else if (t < 0.75) {
-              return mix(target_scales, scales, pow((t - 0.55) * 5.0, 2.0));
+              return mix(targetScales, scales, pow((t - 0.55) * 5.0, 2.0));
             } else {
               return scales;
             }
           }
 
-          float applyOpacity(float opacity, float t, bool fade_in) {
-            if (fade_in) {
+          float applyOpacity(float opacity, float t, bool fadeIn) {
+            if (fadeIn) {
               if (t < 0.4) {
                 return 0.0;
               } else if (t < 0.6) {
@@ -163,10 +163,10 @@
         ],
         statements: ({ inputs, outputs }) => dyno.unindentLines(`
           ${outputs.gsplat} = ${inputs.gsplat};
-          ${outputs.gsplat}.center = applyCenter(${inputs.gsplat}.center, ${inputs.t}, ${inputs.sphere_radius}, ${inputs.sphere_height});
-          ${outputs.gsplat}.scales = applyScale(${inputs.gsplat}.scales, ${inputs.t}, ${inputs.splat_scale});
-          if (${inputs.in_transition}) {
-            ${outputs.gsplat}.rgba.a = applyOpacity(${inputs.gsplat}.rgba.a, ${inputs.t}, ${inputs.fade_in});
+          ${outputs.gsplat}.center = applyCenter(${inputs.gsplat}.center, ${inputs.t}, ${inputs.spereRadius}, ${inputs.sphereHeight});
+          ${outputs.gsplat}.scales = applyScale(${inputs.gsplat}.scales, ${inputs.t}, ${inputs.splatScale});
+          if (${inputs.inTransition}) {
+            ${outputs.gsplat}.rgba.a = applyOpacity(${inputs.gsplat}.rgba.a, ${inputs.t}, ${inputs.fadeIn});
           } else {
             ${outputs.gsplat}.rgba.a = 0.0;
           }
@@ -175,38 +175,38 @@
     }
 
     function getTransitionModifier(
-      in_transition, 
-      fade_in, 
-      t, 
-      splat_scale, 
-      sphere_radius, 
-      sphere_height,
+      inTransition,
+      fadeIn,
+      t,
+      splatScale,
+      spereRadius,
+      sphereHeight
     ) {
       const contraction = contractionDyno();
       return dyno.dynoBlock(
         { gsplat: dyno.Gsplat },
         { gsplat: dyno.Gsplat },
-        ({ gsplat }) => { 
-          gsplat = contraction.apply({ gsplat, 
-            in_transition, fade_in, t, splat_scale, sphere_radius, sphere_height
-          }).gsplat
+        ({ gsplat }) => {
+          gsplat = contraction.apply({
+            gsplat, inTransition, fadeIn, t, splatScale, spereRadius, sphereHeight
+          }).gsplat;
           return { gsplat };
         },
       );
     }
-   
+
     async function morphableSplatMesh(
-      asset_name,
+      assetName,
       time,
-      fade_in_time,
-      fade_out_time,
+      fadeInTime,
+      fadeOutTime,
       period,
-      splat_coverage,
-      sphere_radius,
-      sphere_height,
+      splatCoverage,
+      spereRadius,
+      sphereHeight,
     ) {
 
-      const url = await getAssetFileURL(asset_name);
+      const url = await getAssetFileURL(assetName);
       const splatMesh = new SplatMesh({
         url: url,
         onFrame: ({ mesh, time }) => {
@@ -214,26 +214,26 @@
         }
       });
       await splatMesh.initialized; // wait to get splatCount
-      const splat_scale = dyno.div(dyno.mul(splat_coverage, sphere_radius),
+      const splatScale = dyno.div(dyno.mul(splatCoverage, spereRadius),
         dyno.dynoFloat(splatMesh.packedSplats.numSplats / 1000.0)
-      );     
-      
-      const { in_transition, is_fade_in, norm_t } = 
-        getTransitionState(time, fade_in_time, fade_out_time, period);
-      
+      );
+
+      const { inTransition, isFadeIn, normT} =
+        getTransitionState(time, fadeInTime, fadeOutTime, period);
+
       splatMesh.worldModifier = getTransitionModifier(
-        in_transition,
-        is_fade_in, 
-        norm_t, 
-        splat_scale, 
-        sphere_radius,
-        sphere_height,
+        inTransition,
+        isFadeIn,
+        normT,
+        splatScale,
+        spereRadius,
+        sphereHeight
       );
       splatMesh.updateGenerator();
       return splatMesh;
     }
 
-    async function loadDelitGLB(filename, is_env = false) {
+    async function loadDelitGLB(filename, isEnv = false) {
       const url = await getAssetFileURL(filename);
       console.log("Loading GLB", url);
       const gltfLoader = new GLTFLoader();
@@ -245,14 +245,14 @@
       scene.traverse((child) => {
         if (child.isMesh && child.material) {
           const originalMaterial = child.material;
-          const basicMaterial = new THREE.MeshBasicMaterial();          
+          const basicMaterial = new THREE.MeshBasicMaterial();
           if (originalMaterial.color) {
             basicMaterial.color.copy(originalMaterial.color);
           }
           if (originalMaterial.map) {
             basicMaterial.map = originalMaterial.map;
           }
-          if (is_env) { // sky sphere handling
+          if (isEnv) { // sky sphere handling
             basicMaterial.side = THREE.BackSide;
             basicMaterial.map.mapping = THREE.EquirectangularReflectionMapping;
             basicMaterial.map.colorSpace = THREE.LinearSRGBColorSpace;
@@ -297,79 +297,79 @@
 
     handleResize();
     window.addEventListener("resize", handleResize);
-    
+
     const time = dyno.dynoFloat(0.0);
 
-    async function loadAssets(splat_coverage, sphere_radius, sphere_height) { 
+    async function loadAssets(splatCoverage, spereRadius, sphereHeight) {
       console.log("Loading initial scene...");
 
       // Load sky sphere
-      const skySphere = await loadDelitGLB(SKY_SPHERE_GLB, true);
+      const skySphere = await loadDelitGLB(skyFile, true);
       scene.add(skySphere);
 
       // Load table GLB
-      const scene_assets = await loadDelitGLB(SCENE_GLB);
-      const scene_scale = 3.5;
-      scene_assets.scale.set(scene_scale, scene_scale, scene_scale);
-      scene_assets.position.set(-1, 0, -0.8);
-      scene.add(scene_assets);
+      const sceneAssets = await loadDelitGLB(sceneFile);
+      const sceneScale = 3.5;
+      sceneAssets.scale.set(sceneScale, sceneScale, sceneScale);
+      sceneAssets.position.set(-1, 0, -0.8);
+      scene.add(sceneAssets);
 
-      const splat_meshes = [];
-      const period = dyno.dynoFloat(TEST_ASSETS.length);
-      for (let i=0; i<TEST_ASSETS.length; i++) {
-        console.log(TEST_ASSETS[i], (i+1) % TEST_ASSETS.length);
-        const splat_mesh = await morphableSplatMesh(
-          TEST_ASSETS[i],
+      const splatMeshes = [];
+      const period = dyno.dynoFloat(splatFiles.length);
+      for (let i=0; i<splatFiles.length; i++) {
+        console.log(splatFiles[i], (i+1) % splatFiles.length);
+        const splatMesh = await morphableSplatMesh(
+          splatFiles[i],
           time,
-          dyno.dynoFloat(i), //fade_in_time
-          dyno.dynoFloat((i+1) % TEST_ASSETS.length), //fade_out_time
+          dyno.dynoFloat(i), //fadeInTime
+          dyno.dynoFloat((i+1) % splatFiles.length), //fadeOutTime
           period,
-          splat_coverage,
-          sphere_radius,
-          sphere_height,
+          splatCoverage,
+          spereRadius,
+          sphereHeight,
         );
-        splat_mesh.quaternion.set(1, 0, 0, 0);
-        scene.add(splat_mesh);
-        splat_meshes.push(splat_mesh);
+        splatMesh.quaternion.set(1, 0, 0, 0);
+        scene.add(splatMesh);
+        splatMeshes.push(splatMesh);
       }
-      return splat_meshes;
+      return splatMeshes;
     }
-    
-    const sphere_radius_dyno =  dyno.dynoFloat(PARAMETERS.sphere_radius)
-    const splat_coverage_dyno = dyno.dynoFloat(PARAMETERS.splat_coverage)
-    const sphere_height_dyno = dyno.dynoFloat(PARAMETERS.sphere_height)
-    const splat_meshes = await loadAssets(splat_coverage_dyno, sphere_radius_dyno, sphere_height_dyno);
-    
+
+    const spereRadiusDyno =  dyno.dynoFloat(PARAMETERS.spereRadius)
+    const splatCoverageDyno = dyno.dynoFloat(PARAMETERS.splatCoverage)
+    const sphereHeightDyno = dyno.dynoFloat(PARAMETERS.sphereHeight)
+    const splatMeshes = await loadAssets(splatCoverageDyno, spereRadiusDyno, sphereHeightDyno);
+
     const gui = new GUI();
-    gui.add(PARAMETERS, "sphere_radius").min(0.1).max(8.0).step(0.01).onChange((value) => {
-      sphere_radius_dyno.value = value;
+    gui.add(PARAMETERS, "spereRadius").min(0.1).max(8.0).step(0.01).onChange((value) => {
+      spereRadiusDyno.value = value;
     });
-    gui.add(PARAMETERS, "sphere_height").min(-1.0).max(4.0).step(0.01).onChange((value) => {
-      sphere_height_dyno.value = value;
+    gui.add(PARAMETERS, "sphereHeight").min(-1.0).max(4.0).step(0.01).onChange((value) => {
+      sphereHeightDyno.value = value;
     });
-    gui.add(PARAMETERS, "splat_coverage").min(0.1).max(2.0).step(0.01).onChange((value) => {
-      splat_coverage_dyno.value = value;
+    gui.add(PARAMETERS, "splatCoverage").min(0.1).max(2.0).step(0.01).onChange((value) => {
+      splatCoverageDyno.value = value;
     });
-    gui.add(PARAMETERS, "speed_multipler").min(0.25).max(4.0).step(0.01);
+    gui.add(PARAMETERS, "speedMultiplier").min(0.25).max(4.0).step(0.01);
     gui.add(PARAMETERS, "rotation");
     gui.add(PARAMETERS, "pause");
-    
+
     console.log("Starting render loop");
 
     // Animation loop
     let lastTime = 0;
-    renderer.setAnimationLoop((raw_time) => {
-      raw_time *= 0.0005;
-      const deltaTime = raw_time - (lastTime ?? raw_time);
-      lastTime = raw_time;
+    renderer.setAnimationLoop((rawTime) => {
+      rawTime *= 0.0005;
+      const deltaTime = rawTime - (lastTime ?? rawTime);
+      lastTime = rawTime;
       orbitControls.update();
       renderer.render(scene, camera);
 
       if (!PARAMETERS.pause) {
-        time.value +=deltaTime * PARAMETERS.speed_multipler;
+        time.value +=deltaTime * PARAMETERS.speedMultiplier;
         if (PARAMETERS.rotation) {
-          for (const splat_mesh of splat_meshes) {
-            splat_mesh.rotation.y += deltaTime * PARAMETERS.speed_multipler;
+          for (const splatMesh of splatMeshes) {
+            splatMesh.rotation.y += deltaTime * PARAMETERS.speedMultiplier;
           }
         }
       }
