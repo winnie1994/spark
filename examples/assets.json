@@ -96,27 +96,27 @@
     "directory": "splats"
   },
   "dessert.spz": {
-    "url": "https://storage.googleapis.com/forge-dev-public/dessert.spz",
+    "url": "https://sparkjs.dev/assets/splats/dessert.spz",
     "directory": "splats"
   },
   "penguin.spz": {
-    "url": "https://storage.googleapis.com/forge-dev-public/penguin.spz",
+    "url": "https://sparkjs.dev/assets/splats/penguin.spz",
     "directory": "splats"
   },
   "woobles.spz": {
-    "url": "https://storage.googleapis.com/forge-dev-public/woobles.spz",
+    "url": "https://sparkjs.dev/assets/splats/woobles.spz",
     "directory": "splats"
   },
   "arrow.glb": {
     "url": "https://sparkjs.dev/assets/models/arrow.glb",
     "directory": "models"
   },
-  "dali_env.glb": {
-    "url": "https://storage.googleapis.com/forge-dev-public/dali_env.glb",
+  "dali-env.glb": {
+    "url": "https://sparkjs.dev/assets/models/dali-env.glb",
     "directory": "models"
   },
-  "dali_table.glb": {
-    "url": "https://storage.googleapis.com/forge-dev-public/dali_table.glb",
+  "dali-table.glb": {
+    "url": "https://sparkjs.dev/assets/models/dali-table.glb",
     "directory": "models"
   },
   "valley.spz": {
