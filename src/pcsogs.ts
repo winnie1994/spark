@@ -1,4 +1,5 @@
-import type { PcSogsJson } from "./SplatLoader";
+import { unzip } from "fflate";
+import { type PcSogsJson, tryPcSogsZip } from "./SplatLoader";
 import {
   computeMaxSplats,
   encodeSh1Rgb,
@@ -11,14 +12,13 @@ import {
 } from "./utils";
 
 export async function unpackPcSogs(
-  fileBytes: Uint8Array,
+  json: PcSogsJson,
   extraFiles: Record<string, ArrayBuffer>,
 ): Promise<{
   packedArray: Uint32Array;
   numSplats: number;
   extra: Record<string, unknown>;
 }> {
-  const json = JSON.parse(new TextDecoder().decode(fileBytes)) as PcSogsJson;
   if (json.quats.encoding !== "quaternion_packed") {
     throw new Error("Unsupported quaternion encoding");
   }
@@ -203,4 +203,59 @@ async function decodeImage(fileBytes: ArrayBuffer) {
 async function decodeImageRgba(fileBytes: ArrayBuffer) {
   const { rgba } = await decodeImage(fileBytes);
   return rgba;
+}
+
+export async function unpackPcSogsZip(fileBytes: Uint8Array): Promise<{
+  packedArray: Uint32Array;
+  numSplats: number;
+  extra: Record<string, unknown>;
+}> {
+  const nameJson = tryPcSogsZip(fileBytes);
+  if (!nameJson) {
+    throw new Error("Invalid PC SOGS zip file");
+  }
+  const { name, json } = nameJson;
+  // Find path prefix, will be -1 if no / or \
+  const lastSlash = name.lastIndexOf("/");
+  const lastBackslash = name.lastIndexOf("\\");
+  const prefix = name.slice(0, Math.max(lastSlash, lastBackslash) + 1);
+
+  const fileMap = new Map<string, string>();
+  const refFiles = [
+    ...json.means.files,
+    ...json.scales.files,
+    ...json.quats.files,
+    ...json.sh0.files,
+    ...(json.shN?.files ?? []),
+  ];
+  for (const file of refFiles) {
+    fileMap.set(prefix + file, file);
+  }
+
+  const unzipped = await new Promise<Record<string, ArrayBuffer>>(
+    (resolve, reject) => {
+      unzip(
+        fileBytes,
+        {
+          filter: ({ name }) => {
+            return fileMap.has(name);
+          },
+        },
+        (err, files) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(files);
+          }
+        },
+      );
+    },
+  );
+
+  const extraFiles: Record<string, ArrayBuffer> = {};
+  for (const [full, name] of fileMap.entries()) {
+    extraFiles[name] = unzipped[full];
+  }
+
+  return await unpackPcSogs(json, extraFiles);
 }
