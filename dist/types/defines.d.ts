@@ -1,8 +1,10 @@
-export declare const LN_SCALE_MIN = -9;
+export declare const LN_SCALE_MIN = -12;
 export declare const LN_SCALE_MAX = 9;
 export declare const LN_RESCALE: number;
 export declare const SCALE_MIN: number;
 export declare const SCALE_MAX: number;
+export declare const LN_SCALE_ZERO = -30;
+export declare const SCALE_ZERO: number;
 export declare const SPLAT_TEX_WIDTH_BITS = 11;
 export declare const SPLAT_TEX_HEIGHT_BITS = 11;
 export declare const SPLAT_TEX_DEPTH_BITS = 11;
