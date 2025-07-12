@@ -17,6 +17,7 @@ export type SparkRendererOptions = {
     apertureAngle?: number;
     falloff?: number;
     clipXY?: number;
+    focalAdjustment?: number;
     view?: SparkViewpointOptions;
 };
 export declare class SparkRenderer extends THREE.Mesh {
@@ -34,7 +35,7 @@ export declare class SparkRenderer extends THREE.Mesh {
     apertureAngle: number;
     falloff: number;
     clipXY: number;
-    renderScale: number;
+    focalAdjustment: number;
     splatTexture: null | {
         enable?: boolean;
         texture?: THREE.Data3DTexture;
@@ -108,7 +109,7 @@ export declare class SparkRenderer extends THREE.Mesh {
         clipXY: {
             value: number;
         };
-        renderScale: {
+        focalAdjustment: {
             value: number;
         };
         splatTexEnable: {
