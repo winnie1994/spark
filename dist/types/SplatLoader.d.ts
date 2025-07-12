@@ -8,7 +8,6 @@ export declare class SplatLoader extends Loader {
     constructor(manager?: LoadingManager);
     load(url: string, onLoad?: (decoded: PackedSplats) => void, onProgress?: (event: ProgressEvent) => void, onError?: (error: unknown) => void): void;
     loadAsync(url: string, onProgress?: (event: ProgressEvent) => void): Promise<PackedSplats>;
-    loadExtra(url: string): Promise<ArrayBuffer>;
     parse(packedSplats: PackedSplats): SplatMesh;
 }
 export declare enum SplatFileType {
