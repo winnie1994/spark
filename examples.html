@@ -254,24 +254,24 @@
           const iframe = document.querySelector('.example-frame');
           const codeButton = document.querySelector('.code-button');
           const fullPageButton = document.querySelector('.fullpage-button');
-          
+
           iframe.src = path;
-          
+
           if (codeButton) {
             codeButton.href = `https://github.com/sparkjsdev/spark/blob/main${path}`;
           }
-          
+
           if (fullPageButton) {
             fullPageButton.href = path;
           }
-          
+
           document.querySelectorAll('.example-link').forEach(link => {
             link.classList.remove('active');
             if (link.getAttribute('data-example') === exampleKey) {
               link.classList.add('active');
             }
           });
-          
+
           if (window.location.hash.substring(1) !== exampleKey) {
             history.replaceState(null, null, `#${exampleKey}`);
           }
@@ -280,10 +280,10 @@
         function loadExamples() {
           const panel = document.querySelector('.panel');
           const iframe = document.querySelector('.example-frame');
-          
+
           const actionButtons = document.createElement('div');
           actionButtons.classList.add('action-buttons');
-          
+
           const fullPageButton = document.createElement('a');
           fullPageButton.classList.add('action-button', 'fullpage-button');
           fullPageButton.target = '_blank';
@@ -293,7 +293,7 @@
               <path fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6m10 0l-9 9m3-9h6v6"/>
             </svg>
           `;
-          
+
           const codeButton = document.createElement('a');
           codeButton.classList.add('action-button', 'code-button');
           codeButton.target = '_blank';
@@ -431,6 +431,7 @@
           <a href="#dynamic-lighting" data-example="dynamic-lighting" class="example-link">Dynamic Lighting</a>
           <a href="#particle-animation" data-example="particle-animation" class="example-link">Particle Animation</a>
           <a href="#particle-simulation" data-example="particle-simulation" class="example-link">Particle Simulation</a>
+          <a href="#splat-transitions" data-example="splat-transitions" class="example-link">Splat Transitions</a>
           <a href="#webxr" data-example="webxr" class="example-link">WebXR</a>
           <a href="#glsl" data-example="glsl" class="example-link">GLSL Shaders</a>
           <a href="#debug-color" data-example="debug-color" class="example-link">Debug Coloring</a>
