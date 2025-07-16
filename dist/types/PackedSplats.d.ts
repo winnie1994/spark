@@ -1,3 +1,4 @@
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 import { GsplatGenerator } from './SplatGenerator';
 import { SplatFileType } from './SplatLoader';
 import { DynoProgram, DynoProgramTemplate, DynoUniform } from './dyno';
@@ -70,10 +71,7 @@ export declare class PackedSplats {
     };
     static programTemplate: DynoProgramTemplate | null;
     static generatorProgram: Map<GsplatGenerator, DynoProgram>;
-    static geometry: THREE.PlaneGeometry;
-    static mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.RawShaderMaterial, THREE.Object3DEventMap>;
-    static scene: THREE.Scene;
-    static camera: THREE.Camera;
+    static fullScreenQuad: FullScreenQuad;
 }
 export declare const dynoPackedSplats: (packedSplats?: PackedSplats) => DynoPackedSplats;
 export declare class DynoPackedSplats extends DynoUniform<typeof TPackedSplats, "packedSplats", {

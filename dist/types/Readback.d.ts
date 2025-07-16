@@ -1,3 +1,4 @@
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 import { Dyno } from './dyno';
 import { DynoProgram, DynoProgramTemplate } from './dyno/program';
 import * as THREE from "three";
@@ -43,8 +44,5 @@ export declare class Readback {
     getTexture(): THREE.DataArrayTexture | undefined;
     static programTemplate: DynoProgramTemplate | null;
     static readbackProgram: Map<Rgba8Readback, DynoProgram>;
-    static geometry: THREE.PlaneGeometry;
-    static mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.RawShaderMaterial, THREE.Object3DEventMap>;
-    static scene: THREE.Scene;
-    static camera: THREE.Camera;
+    static fullScreenQuad: FullScreenQuad;
 }
