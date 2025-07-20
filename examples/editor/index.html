@@ -145,6 +145,7 @@
       reversePointerDir: false,
       reversePointerSlide: false,
       backgroundColor: "#000000",
+      viewBoundingBox: false,
       openFiles: () => {
         fileInput.click();
       },
@@ -334,7 +335,7 @@
 
     async function loadFiles(splatFiles) {
       if (guiOptions.resetOnLoad) {
-        const toRemove = frame.children.filter((child) => child instanceof SplatMesh);
+        const toRemove = frame.children.filter((child) => child instanceof SplatMesh || child instanceof THREE.Box3Helper);
         for (const child of toRemove) {
           frame.remove(child);
         }
@@ -396,6 +397,7 @@
           }
           frame.add(splatMesh);
           console.log(`Loaded ${fileName} with ${splatMesh.numSplats} splats`);
+          if (guiOptions.viewBoundingBox) addBoundingBoxHelper(splatMesh);
 
           const splatFolder = splatsFolder.addFolder(fileName).close();
           splatFolder.add(splatMesh, "opacity", 0, 1, 0.01).name("Opacity").listen();
@@ -424,6 +426,12 @@
 
       // Restore focus to canvas for keyboard controls
       canvas.focus();
+    }
+
+    async function addBoundingBoxHelper(splatMesh) {
+      const box = await splatMesh.getBoundingBox();
+      const boxHelper = new THREE.Box3Helper(box, 0x00ff00);
+      frame.add(boxHelper);
     }
 
     secondGui.add(guiOptions, "resetOnLoad").name("Reset on load");
@@ -495,6 +503,18 @@
     const debugFolder = gui.addFolder("Debug").close();
     const normalColor = dyno.dynoBool(false);
     debugFolder.add(normalColor, "value").name("Normal color").onChange(() => updateFrameSplats());
+    debugFolder.add(guiOptions, "viewBoundingBox").name("View bounding boxes").onChange((viewBoundingBox) => {
+      let toRemove = [];
+      frame.children.forEach(async (child) => {
+        if (viewBoundingBox && child instanceof SplatMesh) {
+          if (child.opacity > 0.01) addBoundingBoxHelper(child);
+        }
+        if (!viewBoundingBox && child instanceof THREE.Box3Helper) {
+          toRemove.push(child);
+        }
+      });
+      toRemove.forEach((child) => frame.remove(child));
+    });
 
     debugFolder.add(spark, "maxStdDev", 0.1, 3.0, 0.01).name("Max Gsplat stddev").listen();
     debugFolder.add(spark, "falloff", 0, 1, 0.01).name("Gaussian falloff").listen();
