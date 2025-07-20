@@ -299,6 +299,44 @@ export class SplatMesh extends SplatGenerator {
     this.packedSplats.dispose();
   }
 
+  // Returns axis-aligned bounding box of the SplatMesh. If centers_only is true,
+  // only the centers of the splats are used to compute the bounding box.
+  async getBoundingBox(centers_only = false) {
+    await this.initialized;
+    const minVec = new THREE.Vector3(
+      Number.POSITIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+    );
+    const maxVec = new THREE.Vector3(
+      Number.NEGATIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+    );
+    const geometry = new THREE.SphereGeometry(1, 8, 8);
+    const sphere = new THREE.Mesh(geometry);
+    const sphereBox = new THREE.Box3();
+    this.packedSplats.forEachSplat(
+      (_index, center, scales, _quaternion, _opacity, _color) => {
+        if (centers_only) {
+          minVec.min(center);
+          maxVec.max(center);
+        } else {
+          sphere.scale.copy(scales);
+          sphere.quaternion.copy(_quaternion);
+          sphere.position.copy(center);
+          // Update the matrix and compute the bounding box
+          sphere.updateMatrixWorld(true);
+          sphereBox.setFromObject(sphere);
+          minVec.min(sphereBox.min);
+          maxVec.max(sphereBox.max);
+        }
+      },
+    );
+    const box = new THREE.Box3(minVec, maxVec);
+    return box;
+  }
+
   constructGenerator(context: SplatMeshContext) {
     const { transform, viewToObject, recolor } = context;
     const generator = dynoBlock(
