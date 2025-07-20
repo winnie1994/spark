@@ -301,7 +301,7 @@ export class SplatMesh extends SplatGenerator {
 
   // Returns axis-aligned bounding box of the SplatMesh. If centers_only is true,
   // only the centers of the splats are used to compute the bounding box.
-  async getBoundingBox(centers_only = false) {
+  async getBoundingBox(centers_only = true) {
     await this.initialized;
     const minVec = new THREE.Vector3(
       Number.POSITIVE_INFINITY,
