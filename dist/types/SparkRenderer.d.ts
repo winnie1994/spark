@@ -43,6 +43,16 @@ export type SparkRendererOptions = {
      */
     maxStdDev?: number;
     /**
+     * Maximum pixel radius for splat rendering.
+     * @default 512.0
+     */
+    maxPixelRadius?: number;
+    /**
+     * Minimum alpha value for splat rendering.
+     * @default 0.5 * (1.0 / 255.0)
+     */
+    minAlpha?: number;
+    /**
      * Enable 2D Gaussian splatting rendering ability. When this mode is enabled,
      * any scale x/y/z component that is exactly 0 (minimum quantized value) results
      * in the other two non-0 axis being interpreted as an oriented 2D Gaussian Splat,
@@ -109,6 +119,8 @@ export declare class SparkRenderer extends THREE.Mesh {
     preUpdate: boolean;
     originDistance: number;
     maxStdDev: number;
+    maxPixelRadius: number;
+    minAlpha: number;
     enable2DGS: boolean;
     preBlurAmount: number;
     blurAmount: number;
@@ -167,6 +179,12 @@ export declare class SparkRenderer extends THREE.Mesh {
             value: THREE.Vector3;
         };
         maxStdDev: {
+            value: number;
+        };
+        maxPixelRadius: {
+            value: number;
+        };
+        minAlpha: {
             value: number;
         };
         enable2DGS: {
