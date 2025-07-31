@@ -1,4 +1,5 @@
-import init_wasm, { sort_splats } from "spark-internal-rs";
+import init_wasm, { sort_splats, sort32_splats } from "spark-internal-rs";
+import type { SplatEncoding } from "./PackedSplats";
 import type { PcSogsJson, TranscodeSpzInput } from "./SplatLoader";
 import { unpackAntiSplat } from "./antisplat";
 import { WASM_SPLAT_SORT } from "./defines";
@@ -18,6 +19,7 @@ import {
   setPackedSplatQuat,
   setPackedSplatRgb,
   setPackedSplatScales,
+  toHalf,
 } from "./utils";
 
 // WebWorker for Spark's background CPU tasks, such as Gsplat file decoding
@@ -36,11 +38,16 @@ async function onMessage(event: MessageEvent) {
   try {
     switch (name) {
       case "unpackPly": {
-        const { packedArray, fileBytes } = args as {
+        const { packedArray, fileBytes, splatEncoding } = args as {
           packedArray: Uint32Array;
           fileBytes: Uint8Array;
+          splatEncoding: SplatEncoding;
         };
-        const decoded = await unpackPly({ packedArray, fileBytes });
+        const decoded = await unpackPly({
+          packedArray,
+          fileBytes,
+          splatEncoding,
+        });
         result = {
           id,
           numSplats: decoded.numSplats,
@@ -50,8 +57,11 @@ async function onMessage(event: MessageEvent) {
         break;
       }
       case "decodeSpz": {
-        const { fileBytes } = args as { fileBytes: Uint8Array };
-        const decoded = unpackSpz(fileBytes);
+        const { fileBytes, splatEncoding } = args as {
+          fileBytes: Uint8Array;
+          splatEncoding: SplatEncoding;
+        };
+        const decoded = unpackSpz(fileBytes, splatEncoding);
         result = {
           id,
           numSplats: decoded.numSplats,
@@ -61,8 +71,11 @@ async function onMessage(event: MessageEvent) {
         break;
       }
       case "decodeAntiSplat": {
-        const { fileBytes } = args as { fileBytes: Uint8Array };
-        const decoded = unpackAntiSplat(fileBytes);
+        const { fileBytes, splatEncoding } = args as {
+          fileBytes: Uint8Array;
+          splatEncoding: SplatEncoding;
+        };
+        const decoded = unpackAntiSplat(fileBytes, splatEncoding);
         result = {
           id,
           numSplats: decoded.numSplats,
@@ -71,8 +84,11 @@ async function onMessage(event: MessageEvent) {
         break;
       }
       case "decodeKsplat": {
-        const { fileBytes } = args as { fileBytes: Uint8Array };
-        const decoded = unpackKsplat(fileBytes);
+        const { fileBytes, splatEncoding } = args as {
+          fileBytes: Uint8Array;
+          splatEncoding: SplatEncoding;
+        };
+        const decoded = unpackKsplat(fileBytes, splatEncoding);
         result = {
           id,
           numSplats: decoded.numSplats,
@@ -82,14 +98,15 @@ async function onMessage(event: MessageEvent) {
         break;
       }
       case "decodePcSogs": {
-        const { fileBytes, extraFiles } = args as {
+        const { fileBytes, extraFiles, splatEncoding } = args as {
           fileBytes: Uint8Array;
           extraFiles: Record<string, ArrayBuffer>;
+          splatEncoding: SplatEncoding;
         };
         const json = JSON.parse(
           new TextDecoder().decode(fileBytes),
         ) as PcSogsJson;
-        const decoded = await unpackPcSogs(json, extraFiles);
+        const decoded = await unpackPcSogs(json, extraFiles, splatEncoding);
         result = {
           id,
           numSplats: decoded.numSplats,
@@ -99,8 +116,11 @@ async function onMessage(event: MessageEvent) {
         break;
       }
       case "decodePcSogsZip": {
-        const { fileBytes } = args as { fileBytes: Uint8Array };
-        const decoded = await unpackPcSogsZip(fileBytes);
+        const { fileBytes, splatEncoding } = args as {
+          fileBytes: Uint8Array;
+          splatEncoding: SplatEncoding;
+        };
+        const decoded = await unpackPcSogsZip(fileBytes, splatEncoding);
         result = {
           id,
           numSplats: decoded.numSplats,
@@ -134,11 +154,6 @@ async function onMessage(event: MessageEvent) {
           readback: Uint16Array;
           ordering: Uint32Array;
         };
-        result = {
-          id,
-          readback,
-          ordering,
-        };
         if (WASM_SPLAT_SORT) {
           result = {
             id,
@@ -151,6 +166,31 @@ async function onMessage(event: MessageEvent) {
             id,
             readback,
             ...sortDoubleSplats({ numSplats, readback, ordering }),
+          };
+        }
+        break;
+      }
+      case "sort32Splats": {
+        const { maxSplats, numSplats, readback, ordering } = args as {
+          maxSplats: number;
+          numSplats: number;
+          readback: Uint32Array;
+          ordering: Uint32Array;
+        };
+        // Benchmark sort
+        // benchmarkSort(numSplats, readback, ordering);
+        if (WASM_SPLAT_SORT) {
+          result = {
+            id,
+            readback,
+            ordering,
+            activeSplats: sort32_splats(numSplats, readback, ordering),
+          };
+        } else {
+          result = {
+            id,
+            readback,
+            ...sort32Splats({ maxSplats, numSplats, readback, ordering }),
           };
         }
         break;
@@ -171,6 +211,7 @@ async function onMessage(event: MessageEvent) {
     }
   } catch (e) {
     error = e;
+    console.error(error);
   }
 
   // Send the result or error back to the main thread, making sure to transfer any ArrayBuffers
@@ -180,10 +221,91 @@ async function onMessage(event: MessageEvent) {
   );
 }
 
+function benchmarkSort(
+  numSplats: number,
+  readback32: Uint32Array,
+  ordering: Uint32Array,
+) {
+  if (numSplats > 0) {
+    console.log("Running sort benchmark");
+    const readbackF32 = new Float32Array(readback32.buffer);
+    const readback16 = new Uint16Array(readback32.length);
+    for (let i = 0; i < numSplats; ++i) {
+      readback16[i] = toHalf(readbackF32[i]);
+    }
+
+    const WARMUP = 10;
+    for (let i = 0; i < WARMUP; ++i) {
+      const activeSplats = sort_splats(numSplats, readback16, ordering);
+      const activeSplats32 = sort32_splats(numSplats, readback32, ordering);
+      const results = sortDoubleSplats({
+        numSplats,
+        readback: readback16,
+        ordering,
+      });
+      const results32 = sort32Splats({
+        maxSplats: numSplats,
+        numSplats,
+        readback: readback32,
+        ordering,
+      });
+    }
+
+    const TIMING_SAMPLES = 1000;
+    let start: number;
+
+    start = performance.now();
+    for (let i = 0; i < TIMING_SAMPLES; ++i) {
+      const activeSplats = sort_splats(numSplats, readback16, ordering);
+    }
+    const wasmTime = (performance.now() - start) / TIMING_SAMPLES;
+
+    start = performance.now();
+    for (let i = 0; i < TIMING_SAMPLES; ++i) {
+      const results = sortDoubleSplats({
+        numSplats,
+        readback: readback16,
+        ordering,
+      });
+    }
+    const jsTime = (performance.now() - start) / TIMING_SAMPLES;
+
+    console.log(
+      `JS: ${jsTime} ms, WASM: ${wasmTime} ms, numSplats: ${numSplats}`,
+    );
+
+    start = performance.now();
+    for (let i = 0; i < TIMING_SAMPLES; ++i) {
+      const activeSplats32 = sort32_splats(numSplats, readback32, ordering);
+    }
+    const wasm32Time = (performance.now() - start) / TIMING_SAMPLES;
+
+    start = performance.now();
+    for (let i = 0; i < TIMING_SAMPLES; ++i) {
+      const results = sort32Splats({
+        maxSplats: numSplats,
+        numSplats,
+        readback: readback32,
+        ordering,
+      });
+    }
+    const js32Time = (performance.now() - start) / TIMING_SAMPLES;
+
+    console.log(
+      `JS32: ${js32Time} ms, WASM32: ${wasm32Time} ms, numSplats: ${numSplats}`,
+    );
+  }
+}
+
 async function unpackPly({
   packedArray,
   fileBytes,
-}: { packedArray: Uint32Array; fileBytes: Uint8Array }): Promise<{
+  splatEncoding,
+}: {
+  packedArray: Uint32Array;
+  fileBytes: Uint8Array;
+  splatEncoding: SplatEncoding;
+}): Promise<{
   packedArray: Uint32Array;
   numSplats: number;
   extra: Record<string, unknown>;
@@ -229,6 +351,7 @@ async function unpackPly({
         r,
         g,
         b,
+        splatEncoding,
       );
     },
     (index, sh1, sh2, sh3) => {
@@ -236,19 +359,19 @@ async function unpackPly({
         if (!extra.sh1) {
           extra.sh1 = new Uint32Array(numSplats * 2);
         }
-        encodeSh1Rgb(extra.sh1 as Uint32Array, index, sh1);
+        encodeSh1Rgb(extra.sh1 as Uint32Array, index, sh1, splatEncoding);
       }
       if (sh2) {
         if (!extra.sh2) {
           extra.sh2 = new Uint32Array(numSplats * 4);
         }
-        encodeSh2Rgb(extra.sh2 as Uint32Array, index, sh2);
+        encodeSh2Rgb(extra.sh2 as Uint32Array, index, sh2, splatEncoding);
       }
       if (sh3) {
         if (!extra.sh3) {
           extra.sh3 = new Uint32Array(numSplats * 4);
         }
-        encodeSh3Rgb(extra.sh3 as Uint32Array, index, sh3);
+        encodeSh3Rgb(extra.sh3 as Uint32Array, index, sh3, splatEncoding);
       }
     },
   );
@@ -256,7 +379,10 @@ async function unpackPly({
   return { packedArray, numSplats, extra };
 }
 
-function unpackSpz(fileBytes: Uint8Array): {
+function unpackSpz(
+  fileBytes: Uint8Array,
+  splatEncoding: SplatEncoding,
+): {
   packedArray: Uint32Array;
   numSplats: number;
   extra: Record<string, unknown>;
@@ -275,10 +401,17 @@ function unpackSpz(fileBytes: Uint8Array): {
       setPackedSplatOpacity(packedArray, index, alpha);
     },
     (index, r, g, b) => {
-      setPackedSplatRgb(packedArray, index, r, g, b);
+      setPackedSplatRgb(packedArray, index, r, g, b, splatEncoding);
     },
     (index, scaleX, scaleY, scaleZ) => {
-      setPackedSplatScales(packedArray, index, scaleX, scaleY, scaleZ);
+      setPackedSplatScales(
+        packedArray,
+        index,
+        scaleX,
+        scaleY,
+        scaleZ,
+        splatEncoding,
+      );
     },
     (index, quatX, quatY, quatZ, quatW) => {
       setPackedSplatQuat(packedArray, index, quatX, quatY, quatZ, quatW);
@@ -288,19 +421,19 @@ function unpackSpz(fileBytes: Uint8Array): {
         if (!extra.sh1) {
           extra.sh1 = new Uint32Array(numSplats * 2);
         }
-        encodeSh1Rgb(extra.sh1 as Uint32Array, index, sh1);
+        encodeSh1Rgb(extra.sh1 as Uint32Array, index, sh1, splatEncoding);
       }
       if (sh2) {
         if (!extra.sh2) {
           extra.sh2 = new Uint32Array(numSplats * 4);
         }
-        encodeSh2Rgb(extra.sh2 as Uint32Array, index, sh2);
+        encodeSh2Rgb(extra.sh2 as Uint32Array, index, sh2, splatEncoding);
       }
       if (sh3) {
         if (!extra.sh3) {
           extra.sh3 = new Uint32Array(numSplats * 4);
         }
-        encodeSh3Rgb(extra.sh3 as Uint32Array, index, sh3);
+        encodeSh3Rgb(extra.sh3 as Uint32Array, index, sh3, splatEncoding);
       }
     },
   );
@@ -308,9 +441,9 @@ function unpackSpz(fileBytes: Uint8Array): {
 }
 
 // Array of buckets for sorting float16 distances with range [0, DEPTH_INFINITY].
-const DEPTH_INFINITY = 0x7c00;
-const DEPTH_SIZE = DEPTH_INFINITY + 1;
-let depthArray: Uint32Array | null = null;
+const DEPTH_INFINITY_F16 = 0x7c00;
+const DEPTH_SIZE_16 = DEPTH_INFINITY_F16 + 1;
+let depthArray16: Uint32Array | null = null;
 
 function sortSplats({
   totalSplats,
@@ -323,10 +456,10 @@ function sortSplats({
   // Sort totalSplats Gsplats, each with 4 bytes of readback, and outputs Uint32Array
   // of indices from most distant to nearest. Each 4 bytes encode a float16 distance
   // and unused high bytes.
-  if (!depthArray) {
-    depthArray = new Uint32Array(DEPTH_SIZE);
+  if (!depthArray16) {
+    depthArray16 = new Uint32Array(DEPTH_SIZE_16);
   }
-  depthArray.fill(0);
+  depthArray16.fill(0);
 
   const readbackUint32 = readback.map((layer) => new Uint32Array(layer.buffer));
   const layerSize = readbackUint32[0].length;
@@ -338,17 +471,17 @@ function sortSplats({
     const layerSplats = Math.min(readbackLayer.length, totalSplats - layerBase);
     for (let i = 0; i < layerSplats; ++i) {
       const pri = readbackLayer[i] & 0x7fff;
-      if (pri < DEPTH_INFINITY) {
-        depthArray[pri] += 1;
+      if (pri < DEPTH_INFINITY_F16) {
+        depthArray16[pri] += 1;
       }
     }
     layerBase += layerSplats;
   }
 
   let activeSplats = 0;
-  for (let j = 0; j < DEPTH_SIZE; ++j) {
-    const nextIndex = activeSplats + depthArray[j];
-    depthArray[j] = activeSplats;
+  for (let j = 0; j < DEPTH_SIZE_16; ++j) {
+    const nextIndex = activeSplats + depthArray16[j];
+    depthArray16[j] = activeSplats;
     activeSplats = nextIndex;
   }
 
@@ -358,16 +491,16 @@ function sortSplats({
     const layerSplats = Math.min(readbackLayer.length, totalSplats - layerBase);
     for (let i = 0; i < layerSplats; ++i) {
       const pri = readbackLayer[i] & 0x7fff;
-      if (pri < DEPTH_INFINITY) {
-        ordering[depthArray[pri]] = layerBase + i;
-        depthArray[pri] += 1;
+      if (pri < DEPTH_INFINITY_F16) {
+        ordering[depthArray16[pri]] = layerBase + i;
+        depthArray16[pri] += 1;
       }
     }
     layerBase += layerSplats;
   }
-  if (depthArray[DEPTH_SIZE - 1] !== activeSplats) {
+  if (depthArray16[DEPTH_SIZE_16 - 1] !== activeSplats) {
     throw new Error(
-      `Expected ${activeSplats} active splats but got ${depthArray[DEPTH_SIZE - 1]}`,
+      `Expected ${activeSplats} active splats but got ${depthArray16[DEPTH_SIZE_16 - 1]}`,
     );
   }
 
@@ -385,16 +518,16 @@ function sortDoubleSplats({
   ordering: Uint32Array;
 } {
   // Ensure depthArray is allocated and zeroed out for our buckets.
-  if (!depthArray) {
-    depthArray = new Uint32Array(DEPTH_SIZE);
+  if (!depthArray16) {
+    depthArray16 = new Uint32Array(DEPTH_SIZE_16);
   }
-  depthArray.fill(0);
+  depthArray16.fill(0);
 
   // Count the number of splats in each bucket (cull Gsplats at infinity).
   for (let i = 0; i < numSplats; ++i) {
     const pri = readback[i];
-    if (pri < DEPTH_INFINITY) {
-      depthArray[pri] += 1;
+    if (pri < DEPTH_INFINITY_F16) {
+      depthArray16[pri] += 1;
     }
   }
 
@@ -402,9 +535,9 @@ function sortDoubleSplats({
   // total number of active (non-infinity) splats, going in reverse order
   // because we want most distant Gsplats to be first in the output array.
   let activeSplats = 0;
-  for (let j = DEPTH_INFINITY - 1; j >= 0; --j) {
-    const nextIndex = activeSplats + depthArray[j];
-    depthArray[j] = activeSplats;
+  for (let j = DEPTH_INFINITY_F16 - 1; j >= 0; --j) {
+    const nextIndex = activeSplats + depthArray16[j];
+    depthArray16[j] = activeSplats;
     activeSplats = nextIndex;
   }
 
@@ -412,16 +545,108 @@ function sortDoubleSplats({
   // bucket order.
   for (let i = 0; i < numSplats; ++i) {
     const pri = readback[i];
-    if (pri < DEPTH_INFINITY) {
-      ordering[depthArray[pri]] = i;
-      depthArray[pri] += 1;
+    if (pri < DEPTH_INFINITY_F16) {
+      ordering[depthArray16[pri]] = i;
+      depthArray16[pri] += 1;
     }
   }
   // Sanity check that the end of the closest bucket is the same as
   // our total count of active splats (not at infinity).
-  if (depthArray[0] !== activeSplats) {
+  if (depthArray16[0] !== activeSplats) {
     throw new Error(
-      `Expected ${activeSplats} active splats but got ${depthArray[0]}`,
+      `Expected ${activeSplats} active splats but got ${depthArray16[0]}`,
+    );
+  }
+
+  return { activeSplats, ordering };
+}
+
+const DEPTH_INFINITY_F32 = 0x7f800000;
+let bucket16lo: Uint32Array | null = null;
+let bucket16hi: Uint32Array | null = null;
+let scratchSplats: Uint32Array | null = null;
+
+// two-pass radix sort (base 65536) of 32-bit keys in readback,
+// but placing largest values first.
+function sort32Splats({
+  maxSplats,
+  numSplats,
+  readback, // Uint32Array of bit‑patterns
+  ordering, // Uint32Array to fill with sorted indices
+}: {
+  maxSplats: number;
+  numSplats: number;
+  readback: Uint32Array;
+  ordering: Uint32Array;
+}): { activeSplats: number; ordering: Uint32Array } {
+  const BASE = 1 << 16; // 65536
+
+  // allocate once
+  if (!bucket16lo) {
+    bucket16lo = new Uint32Array(BASE);
+  }
+  if (!bucket16hi) {
+    bucket16hi = new Uint32Array(BASE);
+  }
+  if (!scratchSplats || scratchSplats.length < maxSplats) {
+    scratchSplats = new Uint32Array(maxSplats);
+  }
+
+  // tally low and high buckets
+  bucket16lo.fill(0);
+  bucket16hi.fill(0);
+  for (let i = 0; i < numSplats; ++i) {
+    const key = readback[i];
+    if (key < DEPTH_INFINITY_F32) {
+      const inv = ~key >>> 0;
+      bucket16lo[inv & 0xffff] += 1;
+      bucket16hi[inv >>> 16] += 1;
+    }
+  }
+
+  //
+  // ——— Pass #1: bucket by inv(lo 16 bits) ———
+  //
+  // exclusive prefix‑sum → starting offsets
+  let total = 0;
+  for (let b = 0; b < BASE; ++b) {
+    const c = bucket16lo[b];
+    bucket16lo[b] = total;
+    total += c;
+  }
+  const activeSplats = total;
+
+  // scatter into scratch by low bits of inv
+  for (let i = 0; i < numSplats; ++i) {
+    const key = readback[i];
+    if (key < DEPTH_INFINITY_F32) {
+      const inv = ~key >>> 0;
+      scratchSplats[bucket16lo[inv & 0xffff]++] = i;
+    }
+  }
+
+  //
+  // ——— Pass #2: bucket by inv(hi 16 bits) ———
+  //
+  // exclusive prefix‑sum again
+  let sum = 0;
+  for (let b = 0; b < BASE; ++b) {
+    const c = bucket16hi[b];
+    bucket16hi[b] = sum;
+    sum += c;
+  }
+
+  // scatter into final ordering by high bits of inv
+  for (let k = 0; k < activeSplats; ++k) {
+    const idx = scratchSplats[k];
+    const inv = ~readback[idx] >>> 0;
+    ordering[bucket16hi[inv >>> 16]++] = idx;
+  }
+
+  // sanity‑check: the last bucket should have eaten all entries
+  if (bucket16hi[BASE - 1] !== activeSplats) {
+    throw new Error(
+      `Expected ${activeSplats} active splats but got ${bucket16hi[BASE - 1]}`,
     );
   }
 
