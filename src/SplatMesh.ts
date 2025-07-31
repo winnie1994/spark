@@ -301,8 +301,8 @@ export class SplatMesh extends SplatGenerator {
 
   // Returns axis-aligned bounding box of the SplatMesh. If centers_only is true,
   // only the centers of the splats are used to compute the bounding box.
-  async getBoundingBox(centers_only = true) {
-    await this.initialized;
+  // IMPORTANT: This should only be called after the SplatMesh is initialized.
+  getBoundingBox(centers_only = true) {
     const minVec = new THREE.Vector3(
       Number.POSITIVE_INFINITY,
       Number.POSITIVE_INFINITY,
@@ -313,23 +313,27 @@ export class SplatMesh extends SplatGenerator {
       Number.NEGATIVE_INFINITY,
       Number.NEGATIVE_INFINITY,
     );
-    const geometry = new THREE.SphereGeometry(1, 8, 8);
-    const sphere = new THREE.Mesh(geometry);
-    const sphereBox = new THREE.Box3();
+    const corners = new THREE.Vector3();
+    const signs = [-1, 1];
     this.packedSplats.forEachSplat(
-      (_index, center, scales, _quaternion, _opacity, _color) => {
+      (_index, center, scales, quaternion, _opacity, _color) => {
         if (centers_only) {
           minVec.min(center);
           maxVec.max(center);
         } else {
-          sphere.scale.copy(scales);
-          sphere.quaternion.copy(_quaternion);
-          sphere.position.copy(center);
-          // Update the matrix and compute the bounding box
-          sphere.updateMatrixWorld(true);
-          sphereBox.setFromObject(sphere);
-          minVec.min(sphereBox.min);
-          maxVec.max(sphereBox.max);
+          // Get the 8 corners of the AABB in local space
+          for (const x of signs) {
+            for (const y of signs) {
+              for (const z of signs) {
+                corners.set(x * scales.x, y * scales.y, z * scales.z);
+                // Transform corner by rotation and position
+                corners.applyQuaternion(quaternion);
+                corners.add(center);
+                minVec.min(corners);
+                maxVec.max(corners);
+              }
+            }
+          }
         }
       },
     );

@@ -397,7 +397,7 @@
           }
           frame.add(splatMesh);
           console.log(`Loaded ${fileName} with ${splatMesh.numSplats} splats`);
-          if (guiOptions.viewBoundingBox) addBoundingBoxHelper(splatMesh);
+          addBoundingBoxHelper(splatMesh);
 
           const splatFolder = splatsFolder.addFolder(fileName).close();
           splatFolder.add(splatMesh, "opacity", 0, 1, 0.01).name("Opacity").listen();
@@ -429,8 +429,10 @@
     }
 
     async function addBoundingBoxHelper(splatMesh) {
-      const box = await splatMesh.getBoundingBox();
+      await splatMesh.initialized;
+      const box = splatMesh.getBoundingBox();
       const boxHelper = new THREE.Box3Helper(box, 0x00ff00);
+      boxHelper.visible = guiOptions.viewBoundingBox;
       frame.add(boxHelper);
     }
 
@@ -504,16 +506,11 @@
     const normalColor = dyno.dynoBool(false);
     debugFolder.add(normalColor, "value").name("Normal color").onChange(() => updateFrameSplats());
     debugFolder.add(guiOptions, "viewBoundingBox").name("View bounding boxes").onChange((viewBoundingBox) => {
-      let toRemove = [];
-      frame.children.forEach(async (child) => {
-        if (viewBoundingBox && child instanceof SplatMesh) {
-          if (child.opacity > 0.01) addBoundingBoxHelper(child);
-        }
-        if (!viewBoundingBox && child instanceof THREE.Box3Helper) {
-          toRemove.push(child);
+      frame.children.forEach((child) => {
+        if (child instanceof THREE.Box3Helper) {
+          child.visible = viewBoundingBox;
         }
       });
-      toRemove.forEach((child) => frame.remove(child));
     });
 
     debugFolder.add(spark, "maxStdDev", 0.1, 3.0, 0.01).name("Max Gsplat stddev").listen();
@@ -664,6 +661,7 @@
     }
 
     const instructions = makeInstructions();
+    addBoundingBoxHelper(instructions);
     frame.add(instructions);
 
     // Load URLs from query parameters if any
