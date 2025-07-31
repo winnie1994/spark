@@ -323,6 +323,11 @@ export class SplatMesh extends SplatGenerator {
   // only the centers of the splats are used to compute the bounding box.
   // IMPORTANT: This should only be called after the SplatMesh is initialized.
   getBoundingBox(centers_only = true) {
+    if (!this.initialized) {
+      throw new Error(
+        "Cannot get bounding box before SplatMesh is initialized",
+      );
+    }
     const minVec = new THREE.Vector3(
       Number.POSITIVE_INFINITY,
       Number.POSITIVE_INFINITY,
