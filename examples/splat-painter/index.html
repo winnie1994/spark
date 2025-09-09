@@ -237,16 +237,30 @@
 
         // Apply painting effect while dragging
         if (isDragging && currentSplatMesh) {
-          currentSplatMesh.splatRgba = spark.getRgba({ generator: currentSplatMesh });
-          currentSplatMesh.updateGenerator();
+          const noSplatRgba = !currentSplatMesh.splatRgba;
+          currentSplatMesh.splatRgba = spark.getRgba(
+            { generator: currentSplatMesh , rgba: currentSplatMesh.splatRgba}
+          );
+          if (noSplatRgba) {
+            currentSplatMesh.updateGenerator();
+          } else {
+            currentSplatMesh.updateVersion();
+          }
         }
     });
     
     renderer.domElement.addEventListener('pointerdown', (event) => {
       isDragging = true;
       if (currentSplatMesh) {
-        currentSplatMesh.splatRgba = spark.getRgba({ generator: currentSplatMesh });
-        currentSplatMesh.updateGenerator();
+        const noSplatRgba = !currentSplatMesh.splatRgba;
+        currentSplatMesh.splatRgba = spark.getRgba(
+          { generator: currentSplatMesh , rgba: currentSplatMesh.splatRgba}
+        );
+        if (noSplatRgba) {
+          currentSplatMesh.updateGenerator();
+        } else {
+          currentSplatMesh.updateVersion();
+        }
       }
     });
     
