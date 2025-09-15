@@ -2,8 +2,10 @@ import { Gunzip } from 'fflate';
 import * as THREE from "three";
 export declare function floatBitsToUint(f: number): number;
 export declare function uintBitsToFloat(u: number): number;
-export declare function toHalf(f: number): number;
-export declare function fromHalf(h: number): number;
+export declare const toHalf: typeof toHalfNative;
+export declare const fromHalf: typeof fromHalfNative;
+declare function toHalfNative(f: number): number;
+declare function fromHalfNative(u: number): number;
 export declare function floatToUint8(v: number): number;
 export declare function floatToSint8(v: number): number;
 export declare function Uint8ToFloat(v: number): number;
@@ -177,3 +179,4 @@ export declare class GunzipReader {
     });
     read(numBytes: number): Uint8Array;
 }
+export {};
