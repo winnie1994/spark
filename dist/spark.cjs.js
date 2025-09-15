@@ -10385,7 +10385,11 @@ const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
     this.lastUpdateTime = null;
     this.defaultCameras = [];
     this.lastStochastic = null;
-    this.pendingUpdate = null;
+    this.pendingUpdate = {
+      scene: null,
+      originToWorld: new THREE__namespace.Matrix4(),
+      timeoutId: -1
+    };
     this.envViewpoint = null;
     this.frustumCulled = false;
     this.renderer = options.renderer;
@@ -10675,21 +10679,32 @@ const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
     scene,
     viewToWorld
   }) {
-    const originToWorld = this.matrixWorld.clone();
+    const originToWorld = this.matrixWorld;
     if (this.preUpdate) {
-      this.updateInternal({ scene, originToWorld, viewToWorld });
-    } else {
-      this.pendingUpdate = {
+      this.updateInternal({
         scene,
-        originToWorld
-      };
-      setTimeout(() => {
-        if (this.pendingUpdate) {
+        originToWorld: originToWorld.clone(),
+        viewToWorld
+      });
+    } else {
+      this.pendingUpdate.scene = scene;
+      this.pendingUpdate.originToWorld.copy(originToWorld);
+      if (this.pendingUpdate.timeoutId === -1) {
+        this.pendingUpdate.timeoutId = setTimeout(() => {
           const { scene: scene2, originToWorld: originToWorld2 } = this.pendingUpdate;
-          this.pendingUpdate = null;
-          this.updateInternal({ scene: scene2, originToWorld: originToWorld2, viewToWorld });
-        }
-      }, 1);
+          this.pendingUpdate.scene = null;
+          this.pendingUpdate.timeoutId = -1;
+          const updated = this.updateInternal({
+            scene: scene2,
+            originToWorld: originToWorld2,
+            viewToWorld
+          });
+          if (updated) {
+            const gl = this.renderer.getContext();
+            gl.flush();
+          }
+        }, 1);
+      }
     }
   }
   updateInternal({
