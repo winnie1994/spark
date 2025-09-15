@@ -7234,6 +7234,7 @@ const _SplatMesh = class _SplatMesh extends SplatGenerator {
         }
       }
     }
+    this.add(createRendererDetectionMesh());
   }
   async asyncInitialize(options) {
     const {
@@ -7790,6 +7791,29 @@ function evaluateSH3(gsplat, sh3, viewDir) {
         }
       `)
   }).outputs.rgb;
+}
+const EMPTY_GEOMETRY$1 = new THREE__namespace.BufferGeometry();
+const EMPTY_MATERIAL = new THREE__namespace.ShaderMaterial();
+function createRendererDetectionMesh() {
+  const mesh = new THREE__namespace.Mesh(EMPTY_GEOMETRY$1, EMPTY_MATERIAL);
+  mesh.frustumCulled = false;
+  mesh.onBeforeRender = function(renderer, scene) {
+    if (!scene.isScene) {
+      this.removeFromParent();
+      return;
+    }
+    let hasSparkRenderer = false;
+    scene.traverse((c) => {
+      if (c instanceof SparkRenderer) {
+        hasSparkRenderer = true;
+      }
+    });
+    if (!hasSparkRenderer) {
+      scene.add(new SparkRenderer({ renderer }));
+    }
+    this.removeFromParent();
+  };
+  return mesh;
 }
 const PLY_PROPERTY_TYPES = [
   "char",
@@ -10328,38 +10352,6 @@ function getShaders() {
   return shaders;
 }
 const MAX_ACCUMULATORS = 5;
-let hasSplatMesh = false;
-let hasSparkRenderer = false;
-let sparkRendererInstance;
-function containsSplatMesh(object3D) {
-  let hasSplatMesh2 = false;
-  if (object3D instanceof SplatMesh) {
-    return true;
-  }
-  object3D.traverse((child) => {
-    hasSplatMesh2 = hasSplatMesh2 || child instanceof SplatMesh;
-  });
-  return hasSplatMesh2;
-}
-const sceneAdd = THREE__namespace.Scene.prototype.add;
-THREE__namespace.Scene.prototype.add = function(object) {
-  hasSplatMesh = hasSplatMesh || containsSplatMesh(object);
-  hasSparkRenderer = hasSparkRenderer || object instanceof SparkRenderer;
-  sceneAdd.call(this, object);
-  return this;
-};
-const sceneOnBeforeRender = THREE__namespace.Scene.prototype.onBeforeRender;
-THREE__namespace.Scene.prototype.onBeforeRender = function(renderer) {
-  if (!hasSplatMesh) {
-    return;
-  }
-  if (!hasSparkRenderer) {
-    const spark = sparkRendererInstance || new SparkRenderer({ renderer });
-    this.add(spark);
-  }
-  THREE__namespace.Scene.prototype.onBeforeRender = sceneOnBeforeRender;
-  THREE__namespace.Scene.prototype.add = sceneAdd;
-};
 const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
   constructor(options) {
     const uniforms = _SparkRenderer.makeUniforms();
@@ -10442,7 +10434,6 @@ const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
     this.viewpoint = this.defaultView;
     this.prepareViewpoint(this.viewpoint);
     this.clock = options.clock ? cloneClock(options.clock) : new THREE__namespace.Clock();
-    sparkRendererInstance = this;
   }
   static makeUniforms() {
     const uniforms = {
