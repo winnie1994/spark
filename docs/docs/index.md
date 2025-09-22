@@ -9,8 +9,8 @@ Copy and paste code below in an `index.html` file or remix in the [Web Playgroun
 <script type="importmap">
   {
     "imports": {
-      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.8/spark.module.js"
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.9/spark.module.js"
     }
   }
 </script>
