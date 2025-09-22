@@ -1,5 +1,6 @@
 import { Gunzip } from 'fflate';
 import * as THREE from "three";
+export declare function normalize(vec: number[]): number[];
 export declare function floatBitsToUint(f: number): number;
 export declare function uintBitsToFloat(u: number): number;
 export declare const toHalf: typeof toHalfNative;
