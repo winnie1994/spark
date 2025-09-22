@@ -1,3 +1,23 @@
+### 0.1.9 (Sep 22, 2025)
+
+Performance improvements, SPZ v3 support, new splat transition and reveal effects, brush painting / erasing splat example.
+
+### Enhancements
+
+- New splat transition effects (#172) (@kali-shade)
+- New splat reveal effects (#153, #149) (@kali-shade)
+- Add support for SPZ v3 (fix #151) (#171) (@gwegash, @dmarcos)
+- Reduce small memory allocations when loading ply files (#147) (@mrxz)
+- Improve .ply parsing speed using compiled parser function (#150) (@mrxz)
+- Add support for ortographic rendering (#157) (@mrxz)
+- Make sure all examples resize when the window is resized (#155) (@mrxz)
+- Call gl.flush() to encourage eager execution. SparkRenderer.updateInternal was not immediately executed (#156) (@mrxz)
+- Use child mesh in `SplatMesh` to auto-inject `SparkRenderer` instead of monkey-patching (#158) (@mrxz)
+- Pre-compute lookup tables when parsing SOGS files (#159) (@mrxz)
+- Avoid allocating THREE.Quaternion instances in `setPackedSplat` (#160) (@mrxz)
+- Use native `Float16Array` to encode a number as a float16 if available. (#161) (@mrxz)
+- Splat brush painting / brush erasing example (#165) (@winnie1994)
+
 ### 0.1.8 (July 31, 2025)
 
 Bug fix + SplatMesh bounding box calculation.
