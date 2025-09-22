@@ -37,7 +37,7 @@ export class SpzReader {
       throw new Error("Invalid SPZ file");
     }
     this.version = header.getUint32(4, true);
-    if (this.version < 1 || this.version > 2) {
+    if (this.version < 1 || this.version > 3) {
       throw new Error(`Unsupported SPZ version: ${this.version}`);
     }
 
@@ -90,7 +90,7 @@ export class SpzReader {
         const z = fromHalf(centerUint16[i3 + 2]);
         centerCallback?.(i, x, y, z);
       }
-    } else if (this.version === 2) {
+    } else if (this.version === 2 || this.version === 3) {
       // 24-bit fixed-point centers
       const fixed = 1 << this.fractionalBits;
       const centerBytes = this.reader.read(this.numSplats * 3 * 3);
@@ -147,7 +147,72 @@ export class SpzReader {
         scalesCallback?.(i, scaleX, scaleY, scaleZ);
       }
     }
-    {
+    if (this.version === 3) {
+      // Version 3 uses a trick called "smallest three" to compress the rotation quaternions
+      // achieving better precision.
+      // "Optimizing orientation" section at https://gafferongames.com/post/snapshot_compression/
+      // A quaternion length must be 1: x^2+y^2+z^2+w^2 = 1
+      // We can drop one component and reconstruct it with the identity above.
+      // Largest component is dropped for best numerical precision.
+      // Quaternion stored in 32 bits
+      // 10 bits singed integer for each of the 3 components + 2 bits indicating the index of dropped component.
+      // vs 8 bits for each component uncompressed (spz version < 3)
+      // Max Value after extracting largest component v is another component v
+      // (v,v,0,0)
+      // v^2 + v^2 = 1
+      // v = 1 / sqrt(2);
+      const maxValue = 1 / Math.sqrt(2); // 0.7071
+      const quatBytes = this.reader.read(this.numSplats * 4);
+      for (let i = 0; i < this.numSplats; i++) {
+        const i3 = i * 4;
+        const quaternion = [0, 0, 0, 0];
+        const values = [
+          quatBytes[i3],
+          quatBytes[i3 + 1],
+          quatBytes[i3 + 2],
+          quatBytes[i3 + 3],
+        ];
+        // all values are packed in 32 bits (10 per each of 3 components + 2 bits of index of larged value)
+        const combinedValues =
+          values[0] + (values[1] << 8) + (values[2] << 16) + (values[3] << 24);
+        // each component value is 9 bits + sign (1 bit)
+        const valueMask = (1 << 9) - 1;
+        // extract index of the largest element. 2 top bits.
+        const largestIndex = combinedValues >>> 30;
+        let remainingValues = combinedValues;
+        let sumSquares = 0;
+
+        for (let i = 3; i >= 0; --i) {
+          if (i !== largestIndex) {
+            // extract current value and sign.
+            const value = remainingValues & valueMask;
+            const sign = (remainingValues >>> 9) & 0x1;
+            // each value is represented as 10 bits. Shift to next one.
+            remainingValues = remainingValues >>> 10;
+            // convert to range [0,1] and then to [0, 0.7071]
+            quaternion[i] = maxValue * (value / valueMask);
+            // apply sign.
+            quaternion[i] = sign === 0 ? quaternion[i] : -quaternion[i];
+            // accumulate the sum of squares
+            sumSquares += quaternion[i] * quaternion[i];
+          }
+        }
+
+        // quartenion length must be 1 (x^2+y^2+z^2+w^2 = 1)
+        // so can reconstruct largest component from the other 3.
+        // w = sqrt(1 - x^2 - y^2 - z^2);
+        const square = 1 - sumSquares;
+        quaternion[largestIndex] = Math.sqrt(Math.max(square, 0));
+
+        quatCallback?.(
+          i,
+          quaternion[0],
+          quaternion[1],
+          quaternion[2],
+          quaternion[3],
+        );
+      }
+    } else {
       const quatBytes = this.reader.read(this.numSplats * 3);
       for (let i = 0; i < this.numSplats; i++) {
         const i3 = i * 3;
