@@ -185,7 +185,7 @@
   </script>
   <script type="module">
     import * as THREE from "three";
-    import { SplatMesh, transcodeSpz } from "@sparkjsdev/spark";
+    import { SplatMesh, transcodeSpz, SparkControls } from "@sparkjsdev/spark";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
     const sparkCanvasEl = document.querySelector(".spark-canvas");
@@ -199,10 +199,12 @@
     var fileBytes;
     renderer.setSize(width, height, false);
 
-    const orbitControls = new OrbitControls(camera, renderer.domElement);
-    orbitControls.target.set(0, 0, 0);
-    orbitControls.minDistance = 0.1;
-    orbitControls.maxDistance = 10;
+    debugger;
+    const controls = new SparkControls({ canvas: sparkCanvasEl });
+    // const orbitControls = new OrbitControls(camera, renderer.domElement);
+    // orbitControls.target.set(0, 0, 0);
+    // orbitControls.minDistance = 0.1;
+    // orbitControls.maxDistance = 10;
 
     function resize() {
       const width = window.innerWidth;
@@ -225,7 +227,8 @@
 
     renderer.setAnimationLoop(function animate(time) {
       resize();
-      orbitControls.update();
+      // orbitControls.update();
+      controls.update(camera);
       renderer.render(scene, camera);
     });
 
