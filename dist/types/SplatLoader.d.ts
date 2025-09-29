@@ -89,7 +89,7 @@ export declare function isPcSogs(input: ArrayBuffer | Uint8Array | string): bool
 export declare function tryPcSogs(input: ArrayBuffer | Uint8Array | string): PcSogsJson | PcSogsV2Json | undefined;
 export declare function tryPcSogsZip(input: ArrayBuffer | Uint8Array): {
     name: string;
-    json: PcSogsJson;
+    json: PcSogsJson | PcSogsV2Json;
 } | undefined;
 export declare function unpackSplats({ input, extraFiles, fileType, pathOrUrl, splatEncoding, }: {
     input: Uint8Array | ArrayBuffer;
