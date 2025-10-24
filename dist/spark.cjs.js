@@ -9982,7 +9982,7 @@ const _SparkViewpoint = class _SparkViewpoint {
   // The method cannot be private because then SparkRenderer would
   // not be able to call it.
   autoPoll({ accumulator }) {
-    var _a2, _b2, _c, _d;
+    var _a2, _b2, _c;
     if (this.camera) {
       this.camera.updateMatrixWorld();
       this.viewToWorld = this.camera.matrixWorld.clone();
@@ -9995,9 +9995,14 @@ const _SparkViewpoint = class _SparkViewpoint {
       needsSort = true;
       const { mappingVersion } = this.display.accumulator;
       if (accumulator.mappingVersion === mappingVersion) {
+        accumulator.refCount += 1;
         this.spark.releaseAccumulator(this.display.accumulator);
         this.display.accumulator = accumulator;
+        this.display.viewToWorld.copy(this.viewToWorld);
         displayed = true;
+        if (this.spark.viewpoint === this) {
+          this.spark.prepareViewpoint(this);
+        }
       }
     }
     const latestView = ((_a2 = this.sorting) == null ? void 0 : _a2.viewToWorld) ?? ((_b2 = this.display) == null ? void 0 : _b2.viewToWorld);
@@ -10020,7 +10025,7 @@ const _SparkViewpoint = class _SparkViewpoint {
     if (accumulator) {
       accumulator.refCount += 1;
     }
-    if (accumulator && ((_c = this.pending) == null ? void 0 : _c.accumulator) && this.pending.accumulator !== ((_d = this.display) == null ? void 0 : _d.accumulator)) {
+    if ((_c = this.pending) == null ? void 0 : _c.accumulator) {
       this.spark.releaseAccumulator(this.pending.accumulator);
     }
     this.pending = { accumulator, viewToWorld: this.viewToWorld, displayed };
@@ -10033,9 +10038,9 @@ const _SparkViewpoint = class _SparkViewpoint {
         return;
       }
       const { viewToWorld, displayed } = this.pending;
-      let accumulator = this.pending.accumulator ?? ((_a2 = this.display) == null ? void 0 : _a2.accumulator);
+      let accumulator = this.pending.accumulator;
       if (!accumulator) {
-        accumulator = this.spark.active;
+        accumulator = ((_a2 = this.display) == null ? void 0 : _a2.accumulator) ?? this.spark.active;
         accumulator.refCount += 1;
       }
       this.pending = null;
@@ -10045,6 +10050,7 @@ const _SparkViewpoint = class _SparkViewpoint {
       this.sorting = { viewToWorld };
       await this.sortUpdate({ accumulator, viewToWorld, displayed });
       this.sorting = null;
+      this.spark.releaseAccumulator(accumulator);
     }
   }
   async sortUpdate({
@@ -10137,6 +10143,7 @@ const _SparkViewpoint = class _SparkViewpoint {
     displayed = false
   }) {
     if (!this.display) {
+      accumulator.refCount += 1;
       this.display = {
         accumulator,
         viewToWorld,
@@ -10144,6 +10151,7 @@ const _SparkViewpoint = class _SparkViewpoint {
       };
     } else {
       if (!displayed && accumulator !== this.display.accumulator) {
+        accumulator.refCount += 1;
         this.spark.releaseAccumulator(this.display.accumulator);
         this.display.accumulator = accumulator;
       }
@@ -10450,6 +10458,7 @@ const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
     this.focalAdjustment = options.focalAdjustment ?? 1;
     this.splatEncoding = options.splatEncoding ?? { ...DEFAULT_SPLAT_ENCODING };
     this.active = new SplatAccumulator();
+    this.active.refCount = 1;
     this.accumulatorCount = 1;
     this.freeAccumulators = [];
     for (let count = 0; count < 1; ++count) {
@@ -10788,7 +10797,7 @@ const _SparkRenderer = class _SparkRenderer extends THREE__namespace.Mesh {
       }
       const originChanged = !withinCoorientDist({
         matrix1: originToWorld,
-        matrix2: this.active.toWorld,
+        matrix2: accumulator.toWorld,
         maxDistance: 1e-5,
         minCoorient: 0.99999
       });
