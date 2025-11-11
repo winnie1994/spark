@@ -3,6 +3,7 @@ precision highp float;
 precision highp int;
 
 #include <splatDefines>
+#include <logdepthbuf_pars_fragment>
 
 uniform float near;
 uniform float far;
@@ -93,4 +94,5 @@ void main() {
             fragColor = rgba;
         #endif
     }
+    #include <logdepthbuf_fragment>
 }

@@ -40,48 +40,6 @@ import {
 // of 5 to avoid excessive memory usage.
 const MAX_ACCUMULATORS = 5;
 
-// Scene.onBeforeRender monkey-patch to
-// inject a SparkRenderer into a scene with SplatMeshes if there isn't
-// one already. Restore original Scene.onBeforeRenderer and Scene.add when done.
-let hasSplatMesh = false;
-let hasSparkRenderer = false;
-
-let sparkRendererInstance: SparkRenderer;
-
-function containsSplatMesh(object3D: THREE.Object3D) {
-  let hasSplatMesh = false;
-  if (object3D instanceof SplatMesh) {
-    return true;
-  }
-  object3D.traverse((child: THREE.Object3D) => {
-    hasSplatMesh = hasSplatMesh || child instanceof SplatMesh;
-  });
-  return hasSplatMesh;
-}
-
-const sceneAdd = THREE.Scene.prototype.add;
-THREE.Scene.prototype.add = function (object: THREE.Object3D) {
-  hasSplatMesh = hasSplatMesh || containsSplatMesh(object);
-  hasSparkRenderer = hasSparkRenderer || object instanceof SparkRenderer;
-  sceneAdd.call(this, object);
-  return this;
-};
-
-const sceneOnBeforeRender = THREE.Scene.prototype.onBeforeRender;
-THREE.Scene.prototype.onBeforeRender = function (
-  renderer: THREE.WebGLRenderer,
-) {
-  if (!hasSplatMesh) {
-    return;
-  }
-  if (!hasSparkRenderer) {
-    const spark = sparkRendererInstance || new SparkRenderer({ renderer });
-    this.add(spark);
-  }
-  THREE.Scene.prototype.onBeforeRender = sceneOnBeforeRender;
-  THREE.Scene.prototype.add = sceneAdd;
-};
-
 export type SparkRendererOptions = {
   /**
    * Pass in your THREE.WebGLRenderer instance so Spark can perform work
@@ -126,6 +84,11 @@ export type SparkRendererOptions = {
    * @default Math.sqrt(8)
    */
   maxStdDev?: number;
+  /**
+   * Minimum pixel radius for splat rendering.
+   * @default 0.0
+   */
+  minPixelRadius?: number;
   /**
    * Maximum pixel radius for splat rendering.
    * @default 512.0
@@ -212,6 +175,7 @@ export class SparkRenderer extends THREE.Mesh {
   needsUpdate: boolean;
   originDistance: number;
   maxStdDev: number;
+  minPixelRadius: number;
   maxPixelRadius: number;
   minAlpha: number;
   enable2DGS: boolean;
@@ -267,10 +231,11 @@ export class SparkRenderer extends THREE.Mesh {
   viewpoint: SparkViewpoint;
 
   // Holds data needed to perform a scheduled Gsplat update.
-  private pendingUpdate: {
-    scene: THREE.Scene;
-    originToWorld: THREE.Matrix4;
-  } | null = null;
+  private pendingUpdate = {
+    scene: null as THREE.Scene | null,
+    originToWorld: new THREE.Matrix4(),
+    timeoutId: -1,
+  };
 
   // Internal SparkViewpoint used for environment map rendering.
   private envViewpoint: SparkViewpoint | null = null;
@@ -335,6 +300,7 @@ export class SparkRenderer extends THREE.Mesh {
     this.needsUpdate = false;
     this.originDistance = options.originDistance ?? 1;
     this.maxStdDev = options.maxStdDev ?? Math.sqrt(8.0);
+    this.minPixelRadius = options.minPixelRadius ?? 0.0;
     this.maxPixelRadius = options.maxPixelRadius ?? 512.0;
     this.minAlpha = options.minAlpha ?? 0.5 * (1.0 / 255.0);
     this.enable2DGS = options.enable2DGS ?? false;
@@ -348,6 +314,7 @@ export class SparkRenderer extends THREE.Mesh {
     this.splatEncoding = options.splatEncoding ?? { ...DEFAULT_SPLAT_ENCODING };
 
     this.active = new SplatAccumulator();
+    this.active.refCount = 1;
     this.accumulatorCount = 1;
     this.freeAccumulators = [];
     // Start with the minimum of 2 total accumulators
@@ -367,8 +334,6 @@ export class SparkRenderer extends THREE.Mesh {
     this.prepareViewpoint(this.viewpoint);
 
     this.clock = options.clock ? cloneClock(options.clock) : new THREE.Clock();
-
-    sparkRendererInstance = this;
   }
 
   static makeUniforms() {
@@ -387,6 +352,8 @@ export class SparkRenderer extends THREE.Mesh {
       renderToViewPos: { value: new THREE.Vector3() },
       // Maximum distance (in stddevs) from Gsplat center to render
       maxStdDev: { value: 1.0 },
+      // Minimum pixel radius for splat rendering
+      minPixelRadius: { value: 0.0 },
       // Maximum pixel radius for splat rendering
       maxPixelRadius: { value: 512.0 },
       // Minimum alpha value for splat rendering
@@ -571,6 +538,7 @@ export class SparkRenderer extends THREE.Mesh {
     this.uniforms.far.value = typedCamera.far;
     this.uniforms.encodeLinear.value = viewpoint.encodeLinear;
     this.uniforms.maxStdDev.value = this.maxStdDev;
+    this.uniforms.minPixelRadius.value = this.minPixelRadius;
     this.uniforms.maxPixelRadius.value = this.maxPixelRadius;
     this.uniforms.minAlpha.value = this.minAlpha;
     this.uniforms.stochastic.value = viewpoint.stochastic;
@@ -668,23 +636,39 @@ export class SparkRenderer extends THREE.Mesh {
   }: { scene: THREE.Scene; viewToWorld?: THREE.Matrix4 }) {
     // Compute the transform for the SparkRenderer to use as origin
     // for Gsplat generation and accumulation.
-    const originToWorld = this.matrixWorld.clone();
+    const originToWorld = this.matrixWorld;
+
     // Either do the update now, or in the next "tick" depending on preUpdate
     if (this.preUpdate) {
-      this.updateInternal({ scene, originToWorld, viewToWorld });
+      this.updateInternal({
+        scene,
+        originToWorld: originToWorld.clone(),
+        viewToWorld,
+      });
     } else {
       // Pass the update parameters to be performed on the next tick
-      this.pendingUpdate = {
-        scene,
-        originToWorld,
-      };
-      setTimeout(() => {
-        if (this.pendingUpdate) {
+      this.pendingUpdate.scene = scene;
+      this.pendingUpdate.originToWorld.copy(originToWorld);
+
+      // Schedule a timeout if there isn't one already
+      if (this.pendingUpdate.timeoutId === -1) {
+        this.pendingUpdate.timeoutId = setTimeout(() => {
           const { scene, originToWorld } = this.pendingUpdate;
-          this.pendingUpdate = null;
-          this.updateInternal({ scene, originToWorld, viewToWorld });
-        }
-      }, 1);
+          this.pendingUpdate.scene = null;
+          this.pendingUpdate.timeoutId = -1;
+          const updated = this.updateInternal({
+            scene: scene as THREE.Scene,
+            originToWorld,
+            viewToWorld,
+          });
+
+          if (updated) {
+            // Flush to encourage eager execution
+            const gl = this.renderer.getContext() as WebGL2RenderingContext;
+            gl.flush();
+          }
+        }, 1);
+      }
     }
   }
 
@@ -782,7 +766,7 @@ export class SparkRenderer extends THREE.Mesh {
       // minimum co-orientation (dot product of quaternions)
       const originChanged = !withinCoorientDist({
         matrix1: originToWorld,
-        matrix2: this.active.toWorld,
+        matrix2: accumulator.toWorld,
         maxDistance: 0.00001,
         minCoorient: 0.99999,
       });

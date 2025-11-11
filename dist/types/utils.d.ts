@@ -1,9 +1,11 @@
-import { Gunzip } from 'fflate';
 import * as THREE from "three";
+export declare function normalize(vec: number[]): number[];
 export declare function floatBitsToUint(f: number): number;
 export declare function uintBitsToFloat(u: number): number;
-export declare function toHalf(f: number): number;
-export declare function fromHalf(h: number): number;
+export declare const toHalf: typeof toHalfNative;
+export declare const fromHalf: typeof fromHalfNative;
+declare function toHalfNative(f: number): number;
+declare function fromHalfNative(u: number): number;
 export declare function floatToUint8(v: number): number;
 export declare function floatToSint8(v: number): number;
 export declare function Uint8ToFloat(v: number): number;
@@ -167,13 +169,13 @@ export declare function decompressPartialGzip(fileBytes: Uint8Array, numBytes: n
 export declare class GunzipReader {
     fileBytes: Uint8Array;
     chunkBytes: number;
-    offset: number;
     chunks: Uint8Array[];
     totalBytes: number;
-    gunzip: Gunzip;
+    reader: ReadableStreamDefaultReader;
     constructor({ fileBytes, chunkBytes, }: {
         fileBytes: Uint8Array;
         chunkBytes?: number;
     });
-    read(numBytes: number): Uint8Array;
+    read(numBytes: number): Promise<Uint8Array>;
 }
+export {};

@@ -6,7 +6,7 @@ import {
   getSplatFileType,
   getSplatFileTypeFromPath,
 } from "./SplatLoader";
-import { GunzipReader, fromHalf, unpackSplat } from "./utils";
+import { GunzipReader, fromHalf, normalize, unpackSplat } from "./utils";
 
 import { decodeAntiSplat } from "./antisplat";
 import { decodeKsplat } from "./ksplat";
@@ -18,26 +18,33 @@ export class SpzReader {
   fileBytes: Uint8Array;
   reader: GunzipReader;
 
-  version: number;
-  numSplats: number;
-  shDegree: number;
-  fractionalBits: number;
-  flags: number;
-  flagAntiAlias: boolean;
-  reserved: number;
-  parsed: boolean;
+  version = -1;
+  numSplats = 0;
+  shDegree = 0;
+  fractionalBits = 0;
+  flags = 0;
+  flagAntiAlias = false;
+  reserved = 0;
+  headerParsed = false;
+  parsed = false;
 
   constructor({ fileBytes }: { fileBytes: Uint8Array | ArrayBuffer }) {
     this.fileBytes =
       fileBytes instanceof ArrayBuffer ? new Uint8Array(fileBytes) : fileBytes;
     this.reader = new GunzipReader({ fileBytes: this.fileBytes });
+  }
 
-    const header = new DataView(this.reader.read(16).buffer);
+  async parseHeader() {
+    if (this.headerParsed) {
+      throw new Error("SPZ file header already parsed");
+    }
+
+    const header = new DataView((await this.reader.read(16)).buffer);
     if (header.getUint32(0, true) !== 0x5053474e) {
       throw new Error("Invalid SPZ file");
     }
     this.version = header.getUint32(4, true);
-    if (this.version < 1 || this.version > 2) {
+    if (this.version < 1 || this.version > 3) {
       throw new Error(`Unsupported SPZ version: ${this.version}`);
     }
 
@@ -47,10 +54,11 @@ export class SpzReader {
     this.flags = header.getUint8(14);
     this.flagAntiAlias = (this.flags & 0x01) !== 0;
     this.reserved = header.getUint8(15);
+    this.headerParsed = true;
     this.parsed = false;
   }
 
-  parseSplats(
+  async parseSplats(
     centerCallback?: (index: number, x: number, y: number, z: number) => void,
     alphaCallback?: (index: number, alpha: number) => void,
     rgbCallback?: (index: number, r: number, g: number, b: number) => void,
@@ -74,6 +82,9 @@ export class SpzReader {
       sh3?: Float32Array,
     ) => void,
   ) {
+    if (!this.headerParsed) {
+      throw new Error("SPZ file header must be parsed first");
+    }
     if (this.parsed) {
       throw new Error("SPZ file already parsed");
     }
@@ -81,7 +92,7 @@ export class SpzReader {
 
     if (this.version === 1) {
       // float16 centers
-      const centerBytes = this.reader.read(this.numSplats * 3 * 2);
+      const centerBytes = await this.reader.read(this.numSplats * 3 * 2);
       const centerUint16 = new Uint16Array(centerBytes.buffer);
       for (let i = 0; i < this.numSplats; i++) {
         const i3 = i * 3;
@@ -90,10 +101,10 @@ export class SpzReader {
         const z = fromHalf(centerUint16[i3 + 2]);
         centerCallback?.(i, x, y, z);
       }
-    } else if (this.version === 2) {
+    } else if (this.version === 2 || this.version === 3) {
       // 24-bit fixed-point centers
       const fixed = 1 << this.fractionalBits;
-      const centerBytes = this.reader.read(this.numSplats * 3 * 3);
+      const centerBytes = await this.reader.read(this.numSplats * 3 * 3);
       for (let i = 0; i < this.numSplats; i++) {
         const i9 = i * 9;
         const x =
@@ -121,13 +132,13 @@ export class SpzReader {
     }
 
     {
-      const bytes = this.reader.read(this.numSplats);
+      const bytes = await this.reader.read(this.numSplats);
       for (let i = 0; i < this.numSplats; i++) {
         alphaCallback?.(i, bytes[i] / 255);
       }
     }
     {
-      const rgbBytes = this.reader.read(this.numSplats * 3);
+      const rgbBytes = await this.reader.read(this.numSplats * 3);
       const scale = SH_C0 / 0.15;
       for (let i = 0; i < this.numSplats; i++) {
         const i3 = i * 3;
@@ -138,7 +149,7 @@ export class SpzReader {
       }
     }
     {
-      const scalesBytes = this.reader.read(this.numSplats * 3);
+      const scalesBytes = await this.reader.read(this.numSplats * 3);
       for (let i = 0; i < this.numSplats; i++) {
         const i3 = i * 3;
         const scaleX = Math.exp(scalesBytes[i3] / 16 - 10);
@@ -147,8 +158,71 @@ export class SpzReader {
         scalesCallback?.(i, scaleX, scaleY, scaleZ);
       }
     }
-    {
-      const quatBytes = this.reader.read(this.numSplats * 3);
+    if (this.version === 3) {
+      // Version 3 uses a trick called "smallest three" to compress the rotation quaternions
+      // achieving better precision. "Optimizing orientation" section at https://gafferongames.com/post/snapshot_compression/ A quaternion length must be 1: x^2+y^2+z^2+w^2 = 1
+      // We can drop one component and reconstruct it with the identity above.
+      // Largest component is dropped for best numerical precision.
+      // Quaternion stored in 32 bits
+      // 10 bits singed integer for each of the 3 components + 2 bits indicating the index of dropped component.
+      // vs 8 bits for each component uncompressed (spz version < 3)
+      // Max Value after extracting largest component v is another component v
+      // (v,v,0,0)
+      // v^2 + v^2 = 1
+      // v = 1 / sqrt(2);
+      const maxValue = 1 / Math.sqrt(2); // 0.7071
+      const quatBytes = await this.reader.read(this.numSplats * 4);
+      for (let i = 0; i < this.numSplats; i++) {
+        const i3 = i * 4;
+        const quaternion = [0, 0, 0, 0];
+        const values = [
+          quatBytes[i3],
+          quatBytes[i3 + 1],
+          quatBytes[i3 + 2],
+          quatBytes[i3 + 3],
+        ];
+        // all values are packed in 32 bits (10 per each of 3 components + 2 bits of index of larged value)
+        const combinedValues =
+          values[0] + (values[1] << 8) + (values[2] << 16) + (values[3] << 24);
+        // each component value is 9 bits + sign (1 bit)
+        const valueMask = (1 << 9) - 1;
+        // extract index of the largest element. 2 top bits.
+        const largestIndex = combinedValues >>> 30;
+        let remainingValues = combinedValues;
+        let sumSquares = 0;
+
+        for (let i = 3; i >= 0; --i) {
+          if (i !== largestIndex) {
+            // extract current value and sign.
+            const value = remainingValues & valueMask;
+            const sign = (remainingValues >>> 9) & 0x1;
+            // each value is represented as 10 bits. Shift to next one.
+            remainingValues = remainingValues >>> 10;
+            // convert to range [0,1] and then to [0, 0.7071]
+            quaternion[i] = maxValue * (value / valueMask);
+            // apply sign.
+            quaternion[i] = sign === 0 ? quaternion[i] : -quaternion[i];
+            // accumulate the sum of squares
+            sumSquares += quaternion[i] * quaternion[i];
+          }
+        }
+
+        // quartenion length must be 1 (x^2+y^2+z^2+w^2 = 1)
+        // so can reconstruct largest component from the other 3.
+        // w = sqrt(1 - x^2 - y^2 - z^2);
+        const square = 1 - sumSquares;
+        quaternion[largestIndex] = Math.sqrt(Math.max(square, 0));
+
+        quatCallback?.(
+          i,
+          quaternion[0],
+          quaternion[1],
+          quaternion[2],
+          quaternion[3],
+        );
+      }
+    } else {
+      const quatBytes = await this.reader.read(this.numSplats * 3);
       for (let i = 0; i < this.numSplats; i++) {
         const i3 = i * 3;
         const quatX = quatBytes[i3] / 127.5 - 1;
@@ -165,7 +239,7 @@ export class SpzReader {
       const sh1 = new Float32Array(3 * 3);
       const sh2 = this.shDegree >= 2 ? new Float32Array(5 * 3) : undefined;
       const sh3 = this.shDegree >= 3 ? new Float32Array(7 * 3) : undefined;
-      const shBytes = this.reader.read(
+      const shBytes = await this.reader.read(
         this.numSplats * SH_DEGREE_TO_VECS[this.shDegree] * 3,
       );
 
@@ -197,7 +271,7 @@ const SH_DEGREE_TO_VECS: Record<number, number> = { 1: 3, 2: 8, 3: 15 };
 const SH_C0 = 0.28209479177387814;
 
 export const SPZ_MAGIC = 0x5053474e; // NGSP = Niantic gaussian splat
-export const SPZ_VERSION = 2;
+export const SPZ_VERSION = 3;
 export const FLAG_ANTIALIASED = 0x1;
 
 export class SpzWriter {
@@ -222,11 +296,11 @@ export class SpzWriter {
     flagAntiAlias?: boolean;
   }) {
     const splatSize =
-      9 +
-      1 +
-      3 +
-      3 +
-      3 +
+      9 + // Position
+      1 + // Opacity
+      3 + // Scale
+      3 + // DC-rgb
+      4 + // Rotation
       (shDegree >= 1 ? 9 : 0) +
       (shDegree >= 2 ? 15 : 0) +
       (shDegree >= 3 ? 21 : 0);
@@ -317,34 +391,40 @@ export class SpzWriter {
 
   setQuat(
     index: number,
-    quatX: number,
-    quatY: number,
-    quatZ: number,
-    quatW: number,
+    ...q: [number, number, number, number] // x, y, z, w
   ) {
-    const base = 16 + this.numSplats * 16 + index * 3;
-    const quatNeg = quatW < 0;
-    this.view.setUint8(
-      base,
-      Math.max(
-        0,
-        Math.min(255, Math.round(((quatNeg ? -quatX : quatX) + 1) * 127.5)),
-      ),
-    );
-    this.view.setUint8(
-      base + 1,
-      Math.max(
-        0,
-        Math.min(255, Math.round(((quatNeg ? -quatY : quatY) + 1) * 127.5)),
-      ),
-    );
-    this.view.setUint8(
-      base + 2,
-      Math.max(
-        0,
-        Math.min(255, Math.round(((quatNeg ? -quatZ : quatZ) + 1) * 127.5)),
-      ),
-    );
+    const base = 16 + this.numSplats * 16 + index * 4;
+
+    const quat = normalize(q);
+
+    // Find largest component
+    let iLargest = 0;
+    for (let i = 1; i < 4; ++i) {
+      if (Math.abs(quat[i]) > Math.abs(quat[iLargest])) {
+        iLargest = i;
+      }
+    }
+
+    // Since -quat represents the same rotation as quat, transform the quaternion so the largest element
+    // is positive. This avoids having to send its sign bit.
+    const negate = quat[iLargest] < 0 ? 1 : 0;
+
+    // Do compression using sign bit and 9-bit precision per element.
+    let comp = iLargest;
+    for (let i = 0; i < 4; ++i) {
+      if (i !== iLargest) {
+        const negbit = (quat[i] < 0 ? 1 : 0) ^ negate;
+        const mag = Math.floor(
+          ((1 << 9) - 1) * (Math.abs(quat[i]) / Math.SQRT1_2) + 0.5,
+        );
+        comp = (comp << 10) | (negbit << 9) | mag;
+      }
+    }
+
+    this.view.setUint8(base, comp & 0xff);
+    this.view.setUint8(base + 1, (comp >> 8) & 0xff);
+    this.view.setUint8(base + 2, (comp >> 16) & 0xff);
+    this.view.setUint8(base + 3, (comp >>> 24) & 0xff);
   }
 
   static quantizeSh(sh: number, bits: number) {
@@ -362,7 +442,7 @@ export class SpzWriter {
     sh3?: Float32Array,
   ) {
     const shVecs = SH_DEGREE_TO_VECS[this.shDegree] || 0;
-    const base1 = 16 + this.numSplats * 19 + index * shVecs * 3;
+    const base1 = 16 + this.numSplats * 20 + index * shVecs * 3;
     for (let j = 0; j < 9; ++j) {
       this.view.setUint8(base1 + j, SpzWriter.quantizeSh(sh1[j], 5));
     }
@@ -523,6 +603,7 @@ export async function transcodeSpz(input: TranscodeSpzInput) {
       }
       case SplatFileType.SPZ: {
         const spz = new SpzReader({ fileBytes: input.fileBytes });
+        await spz.parseHeader();
         const mapping = new Int32Array(spz.numSplats);
         mapping.fill(-1);
         const centers = new Float32Array(spz.numSplats * 3);

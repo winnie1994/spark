@@ -10,14 +10,16 @@ export declare class SpzReader {
     flags: number;
     flagAntiAlias: boolean;
     reserved: number;
+    headerParsed: boolean;
     parsed: boolean;
     constructor({ fileBytes }: {
         fileBytes: Uint8Array | ArrayBuffer;
     });
-    parseSplats(centerCallback?: (index: number, x: number, y: number, z: number) => void, alphaCallback?: (index: number, alpha: number) => void, rgbCallback?: (index: number, r: number, g: number, b: number) => void, scalesCallback?: (index: number, scaleX: number, scaleY: number, scaleZ: number) => void, quatCallback?: (index: number, quatX: number, quatY: number, quatZ: number, quatW: number) => void, shCallback?: (index: number, sh1: Float32Array, sh2?: Float32Array, sh3?: Float32Array) => void): void;
+    parseHeader(): Promise<void>;
+    parseSplats(centerCallback?: (index: number, x: number, y: number, z: number) => void, alphaCallback?: (index: number, alpha: number) => void, rgbCallback?: (index: number, r: number, g: number, b: number) => void, scalesCallback?: (index: number, scaleX: number, scaleY: number, scaleZ: number) => void, quatCallback?: (index: number, quatX: number, quatY: number, quatZ: number, quatW: number) => void, shCallback?: (index: number, sh1: Float32Array, sh2?: Float32Array, sh3?: Float32Array) => void): Promise<void>;
 }
 export declare const SPZ_MAGIC = 1347635022;
-export declare const SPZ_VERSION = 2;
+export declare const SPZ_VERSION = 3;
 export declare const FLAG_ANTIALIASED = 1;
 export declare class SpzWriter {
     buffer: ArrayBuffer;
@@ -39,7 +41,7 @@ export declare class SpzWriter {
     static scaleRgb(r: number): number;
     setRgb(index: number, r: number, g: number, b: number): void;
     setScale(index: number, scaleX: number, scaleY: number, scaleZ: number): void;
-    setQuat(index: number, quatX: number, quatY: number, quatZ: number, quatW: number): void;
+    setQuat(index: number, ...q: [number, number, number, number]): void;
     static quantizeSh(sh: number, bits: number): number;
     setSh(index: number, sh1: Float32Array, sh2?: Float32Array, sh3?: Float32Array): void;
     finalize(): Promise<Uint8Array>;

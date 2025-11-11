@@ -4,6 +4,7 @@ precision highp int;
 precision highp usampler2DArray;
 
 #include <splatDefines>
+#include <logdepthbuf_pars_vertex>
 
 attribute uint splatIndex;
 
@@ -17,6 +18,7 @@ uniform uint numSplats;
 uniform vec4 renderToViewQuat;
 uniform vec3 renderToViewPos;
 uniform float maxStdDev;
+uniform float minPixelRadius;
 uniform float maxPixelRadius;
 uniform float time;
 uniform float deltaTime;
@@ -33,6 +35,12 @@ uniform float focalAdjustment;
 
 uniform usampler2DArray packedSplats;
 uniform vec4 rgbMinMaxLnScaleMinMax;
+
+#ifdef USE_LOGDEPTHBUF
+    bool isPerspectiveMatrix( mat4 m ) {
+      return m[ 2 ][ 3 ] == - 1.0;
+    }
+#endif
 
 void main() {
     // Default to outside the frustum so it's discarded if we return early
@@ -131,14 +139,24 @@ void main() {
     // Compute the Jacobian of the splat's projection at its center
     vec2 scaledRenderSize = renderSize * focalAdjustment;
     vec2 focal = 0.5 * scaledRenderSize * vec2(projectionMatrix[0][0], projectionMatrix[1][1]);
-    float invZ = 1.0 / viewCenter.z;
-    vec2 J1 = focal * invZ;
-    vec2 J2 = -(J1 * viewCenter.xy) * invZ;
-    mat3 J = mat3(
-        J1.x, 0.0, J2.x,
-        0.0, J1.y, J2.y,
-        0.0, 0.0, 0.0
-    );
+
+    mat3 J;
+    if(isOrthographic) {
+        J = mat3(
+            focal.x, 0.0, 0.0,
+            0.0, focal.y, 0.0,
+            0.0, 0.0, 0.0
+        );
+    } else {
+        float invZ = 1.0 / viewCenter.z;
+        vec2 J1 = focal * invZ;
+        vec2 J2 = -(J1 * viewCenter.xy) * invZ;
+        J = mat3(
+            J1.x, 0.0, J2.x,
+            0.0, J1.y, J2.y,
+            0.0, 0.0, 0.0
+        );
+    }
 
     // Compute the 2D covariance by projecting the 3D covariance
     // and picking out the XY plane components.
@@ -189,11 +207,14 @@ void main() {
     vec2 eigenVec1 = normalize(vec2((abs(b) < 0.001) ? 1.0 : b, eigen1 - a));
     vec2 eigenVec2 = vec2(eigenVec1.y, -eigenVec1.x);
 
-    float scale1 = position.x * min(maxPixelRadius, maxStdDev * sqrt(eigen1));
-    float scale2 = position.y * min(maxPixelRadius, maxStdDev * sqrt(eigen2));
+    float scale1 = min(maxPixelRadius, maxStdDev * sqrt(eigen1));
+    float scale2 = min(maxPixelRadius, maxStdDev * sqrt(eigen2));
+    if (scale1 < minPixelRadius && scale2 < minPixelRadius) {
+        return;
+    }
 
     // Compute the NDC coordinates for the ellipsoid's diagonal axes.
-    vec2 pixelOffset = eigenVec1 * scale1 + eigenVec2 * scale2;
+    vec2 pixelOffset = position.x * eigenVec1 * scale1 + position.y * eigenVec2 * scale2;
     vec2 ndcOffset = (2.0 / scaledRenderSize) * pixelOffset;
     vec3 ndc = vec3(ndcCenter.xy + ndcOffset, ndcCenter.z);
 
@@ -201,4 +222,5 @@ void main() {
     vSplatUv = position.xy * maxStdDev;
     vNdc = ndc;
     gl_Position = vec4(ndc.xy * clipCenter.w, clipCenter.zw);
+    #include <logdepthbuf_vertex>
 }

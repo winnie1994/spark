@@ -32,7 +32,7 @@
 - Portable: Works across almost all devices, targeting 98%+ WebGL2 support
 - Renders fast even on low-powered mobile devices
 - Render multiple splat objects together with correct sorting
-- Most major splat file formats supported including .PLY (also compressed), .SPZ, .SPLAT, .KSPLAT
+- Most major splat file formats supported including: [.PLY](https://github.com/graphdeco-inria/gaussian-splatting) (also [compressed](https://blog.playcanvas.com/compressing-gaussian-splats/#compressed-ply-format)), [.SPZ](https://github.com/nianticlabs/spz), [.SPLAT](https://github.com/antimatter15/splat), [.KSPLAT](https://github.com/mkkellogg/GaussianSplats3D), [.SOG](https://developer.playcanvas.com/user-manual/gaussian-splatting/formats/sog/)
 - Render multiple viewpoints simultaneously
 - Fully dynamic: each splat can be transformed and edited for animation
 - Real-time splat color editing, displacement, and skeletal animation
@@ -52,8 +52,8 @@ Copy the following code into an `index.html` file.
 <script type="importmap">
   {
     "imports": {
-      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.8/spark.module.js"
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
     }
   }
 </script>
@@ -90,8 +90,8 @@ Remix the [glitch starter template](https://glitch.com/edit/#!/sparkjs-dev)
 <script type="importmap">
   {
     "imports": {
-      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.js",
-      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.8/spark.module.js"
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.178.0/three.module.js",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.9/spark.module.js"
      }
   }
 </script>

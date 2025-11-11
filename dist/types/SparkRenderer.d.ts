@@ -49,6 +49,11 @@ export type SparkRendererOptions = {
      */
     maxStdDev?: number;
     /**
+     * Minimum pixel radius for splat rendering.
+     * @default 0.0
+     */
+    minPixelRadius?: number;
+    /**
      * Maximum pixel radius for splat rendering.
      * @default 512.0
      */
@@ -132,6 +137,7 @@ export declare class SparkRenderer extends THREE.Mesh {
     needsUpdate: boolean;
     originDistance: number;
     maxStdDev: number;
+    minPixelRadius: number;
     maxPixelRadius: number;
     minAlpha: number;
     enable2DGS: boolean;
@@ -194,6 +200,9 @@ export declare class SparkRenderer extends THREE.Mesh {
             value: THREE.Vector3;
         };
         maxStdDev: {
+            value: number;
+        };
+        minPixelRadius: {
             value: number;
         };
         maxPixelRadius: {

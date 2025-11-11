@@ -1,6 +1,10 @@
 import { unzip } from "fflate";
 import type { SplatEncoding } from "./PackedSplats";
-import { type PcSogsJson, tryPcSogsZip } from "./SplatLoader";
+import {
+  type PcSogsJson,
+  type PcSogsV2Json,
+  tryPcSogsZip,
+} from "./SplatLoader";
 import {
   computeMaxSplats,
   encodeSh1Rgb,
@@ -13,7 +17,7 @@ import {
 } from "./utils";
 
 export async function unpackPcSogs(
-  json: PcSogsJson,
+  json: PcSogsJson | PcSogsV2Json,
   extraFiles: Record<string, ArrayBuffer>,
   splatEncoding: SplatEncoding,
 ): Promise<{
@@ -21,11 +25,13 @@ export async function unpackPcSogs(
   numSplats: number;
   extra: Record<string, unknown>;
 }> {
-  if (json.quats.encoding !== "quaternion_packed") {
+  const isVersion2 = "version" in json;
+
+  if (!isVersion2 && json.quats.encoding !== "quaternion_packed") {
     throw new Error("Unsupported quaternion encoding");
   }
 
-  const numSplats = json.means.shape[0];
+  const numSplats = isVersion2 ? json.count : json.means.shape[0];
   const maxSplats = computeMaxSplats(numSplats);
   const packedArray = new Uint32Array(maxSplats * 4);
   const extra: Record<string, unknown> = {};
@@ -54,26 +60,50 @@ export async function unpackPcSogs(
 
   const scalesPromise = decodeImageRgba(extraFiles[json.scales.files[0]]).then(
     (scales) => {
+      let xLookup: number[];
+      let yLookup: number[];
+      let zLookup: number[];
+
+      if (isVersion2) {
+        xLookup =
+          yLookup =
+          zLookup =
+            json.scales.codebook.map((x) => Math.exp(x));
+      } else {
+        xLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.scales.mins[0] +
+              (json.scales.maxs[0] - json.scales.mins[0]) * (i / 255),
+          )
+          .map((x) => Math.exp(x));
+        yLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.scales.mins[1] +
+              (json.scales.maxs[1] - json.scales.mins[1]) * (i / 255),
+          )
+          .map((x) => Math.exp(x));
+        zLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.scales.mins[2] +
+              (json.scales.maxs[2] - json.scales.mins[2]) * (i / 255),
+          )
+          .map((x) => Math.exp(x));
+      }
+
       for (let i = 0; i < numSplats; ++i) {
         const i4 = i * 4;
-        const fx = scales[i4 + 0] / 255;
-        const fy = scales[i4 + 1] / 255;
-        const fz = scales[i4 + 2] / 255;
-        const x =
-          json.scales.mins[0] +
-          (json.scales.maxs[0] - json.scales.mins[0]) * fx;
-        const y =
-          json.scales.mins[1] +
-          (json.scales.maxs[1] - json.scales.mins[1]) * fy;
-        const z =
-          json.scales.mins[2] +
-          (json.scales.maxs[2] - json.scales.mins[2]) * fz;
         setPackedSplatScales(
           packedArray,
           i,
-          Math.exp(x),
-          Math.exp(y),
-          Math.exp(z),
+          xLookup[scales[i4 + 0]],
+          yLookup[scales[i4 + 1]],
+          zLookup[scales[i4 + 2]],
           splatEncoding,
         );
       }
@@ -83,11 +113,15 @@ export async function unpackPcSogs(
   const quatsPromise = decodeImageRgba(extraFiles[json.quats.files[0]]).then(
     (quats) => {
       const SQRT2 = Math.sqrt(2);
+      const lookup = new Array(256)
+        .fill(0)
+        .map((_, i) => (i / 255 - 0.5) * SQRT2);
+
       for (let i = 0; i < numSplats; ++i) {
         const i4 = i * 4;
-        const r0 = (quats[i4 + 0] / 255 - 0.5) * SQRT2;
-        const r1 = (quats[i4 + 1] / 255 - 0.5) * SQRT2;
-        const r2 = (quats[i4 + 2] / 255 - 0.5) * SQRT2;
+        const r0 = lookup[quats[i4 + 0]];
+        const r1 = lookup[quats[i4 + 1]];
+        const r2 = lookup[quats[i4 + 2]];
         const rr = Math.sqrt(Math.max(0, 1.0 - r0 * r0 - r1 * r1 - r2 * r2));
         const rOrder = quats[i4 + 3] - 252;
         const quatX = rOrder === 0 ? r0 : rOrder === 1 ? rr : r1;
@@ -101,34 +135,78 @@ export async function unpackPcSogs(
   const sh0Promise = decodeImageRgba(extraFiles[json.sh0.files[0]]).then(
     (sh0) => {
       const SH_C0 = 0.28209479177387814;
+      let rLookup: number[];
+      let gLookup: number[];
+      let bLookup: number[];
+      let aLookup: number[];
+
+      if (isVersion2) {
+        rLookup =
+          gLookup =
+          bLookup =
+            json.sh0.codebook.map((x) => SH_C0 * x + 0.5);
+        aLookup = new Array(256).fill(0).map((_, i) => i / 255);
+      } else {
+        rLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.sh0.mins[0] +
+              (json.sh0.maxs[0] - json.sh0.mins[0]) * (i / 255),
+          )
+          .map((x) => SH_C0 * x + 0.5);
+        gLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.sh0.mins[1] +
+              (json.sh0.maxs[1] - json.sh0.mins[1]) * (i / 255),
+          )
+          .map((x) => SH_C0 * x + 0.5);
+        bLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.sh0.mins[2] +
+              (json.sh0.maxs[2] - json.sh0.mins[2]) * (i / 255),
+          )
+          .map((x) => SH_C0 * x + 0.5);
+        aLookup = new Array(256)
+          .fill(0)
+          .map(
+            (_, i) =>
+              json.sh0.mins[3] +
+              (json.sh0.maxs[3] - json.sh0.mins[3]) * (i / 255),
+          )
+          .map((x) => 1.0 / (1.0 + Math.exp(-x)));
+      }
+
       for (let i = 0; i < numSplats; ++i) {
         const i4 = i * 4;
-        const f0 = sh0[i4 + 0] / 255;
-        const f1 = sh0[i4 + 1] / 255;
-        const f2 = sh0[i4 + 2] / 255;
-        const f3 = sh0[i4 + 3] / 255;
-        const dc0 =
-          json.sh0.mins[0] + (json.sh0.maxs[0] - json.sh0.mins[0]) * f0;
-        const dc1 =
-          json.sh0.mins[1] + (json.sh0.maxs[1] - json.sh0.mins[1]) * f1;
-        const dc2 =
-          json.sh0.mins[2] + (json.sh0.maxs[2] - json.sh0.mins[2]) * f2;
-        const opa =
-          json.sh0.mins[3] + (json.sh0.maxs[3] - json.sh0.mins[3]) * f3;
-        const r = SH_C0 * dc0 + 0.5;
-        const g = SH_C0 * dc1 + 0.5;
-        const b = SH_C0 * dc2 + 0.5;
-        const a = 1.0 / (1.0 + Math.exp(-opa));
-        setPackedSplatRgba(packedArray, i, r, g, b, a, splatEncoding);
+        setPackedSplatRgba(
+          packedArray,
+          i,
+          rLookup[sh0[i4 + 0]],
+          gLookup[sh0[i4 + 1]],
+          bLookup[sh0[i4 + 2]],
+          aLookup[sh0[i4 + 3]],
+          splatEncoding,
+        );
       }
     },
   );
 
   const promises = [meansPromise, scalesPromise, quatsPromise, sh0Promise];
   if (json.shN) {
-    const useSH3 = json.shN.shape[1] >= 48 - 3;
-    const useSH2 = json.shN.shape[1] >= 27 - 3;
-    const useSH1 = json.shN.shape[1] >= 12 - 3;
+    const useSH3 = isVersion2
+      ? json.shN.bands >= 3
+      : json.shN.shape[1] >= 48 - 3;
+    const useSH2 = isVersion2
+      ? json.shN.bands >= 2
+      : json.shN.shape[1] >= 27 - 3;
+    const useSH1 = isVersion2
+      ? json.shN.bands >= 1
+      : json.shN.shape[1] >= 12 - 3;
 
     if (useSH1) extra.sh1 = new Uint32Array(numSplats * 2);
     if (useSH2) extra.sh2 = new Uint32Array(numSplats * 4);
@@ -143,6 +221,13 @@ export async function unpackPcSogs(
       decodeImage(extraFiles[json.shN.files[0]]),
       decodeImage(extraFiles[json.shN.files[1]]),
     ]).then(([centroids, labels]) => {
+      const lookup =
+        "codebook" in shN
+          ? shN.codebook
+          : new Array(256)
+              .fill(0)
+              .map((_, i) => shN.mins + (shN.maxs - shN.mins) * (i / 255));
+
       for (let i = 0; i < numSplats; ++i) {
         const i4 = i * 4;
         const label = labels.rgba[i4 + 0] + (labels.rgba[i4 + 1] << 8);
@@ -153,30 +238,19 @@ export async function unpackPcSogs(
         for (let d = 0; d < 3; ++d) {
           if (useSH1) {
             for (let k = 0; k < 3; ++k) {
-              sh1[k * 3 + d] =
-                shN.mins +
-                ((shN.maxs - shN.mins) * centroids.rgba[(offset + k) * 4 + d]) /
-                  255;
+              sh1[k * 3 + d] = lookup[centroids.rgba[(offset + k) * 4 + d]];
             }
           }
 
           if (useSH2) {
             for (let k = 0; k < 5; ++k) {
-              sh2[k * 3 + d] =
-                shN.mins +
-                ((shN.maxs - shN.mins) *
-                  centroids.rgba[(offset + 3 + k) * 4 + d]) /
-                  255;
+              sh2[k * 3 + d] = lookup[centroids.rgba[(offset + 3 + k) * 4 + d]];
             }
           }
 
           if (useSH3) {
             for (let k = 0; k < 7; ++k) {
-              sh3[k * 3 + d] =
-                shN.mins +
-                ((shN.maxs - shN.mins) *
-                  centroids.rgba[(offset + 8 + k) * 4 + d]) /
-                  255;
+              sh3[k * 3 + d] = lookup[centroids.rgba[(offset + 8 + k) * 4 + d]];
             }
           }
         }
